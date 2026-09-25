@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Crear cuenta</title>
+</head>
+
+<body>
+
+    <h1>Crear cuenta</h1>
+
+    <p>
+        Complete la información para registrar su emprendimiento.
+    </p>
+
+    <hr>
+
+    <form>
+
+        <label for="nombre">Nombre</label><br>
+        <input type="text" id="nombre" name="nombre"><br><br>
+
+        <label for="apellido">Apellido</label><br>
+        <input type="text" id="apellido" name="apellido"><br><br>
+
+        <label for="correo">Correo electrónico</label><br>
+        <input type="email" id="correo" name="correo"><br><br>
+
+        <label for="emprendimiento">Nombre del emprendimiento</label><br>
+        <input type="text" id="emprendimiento" name="emprendimiento"><br><br>
+
+        <label for="password">Contraseña</label><br>
+        <input type="password" id="password" name="password"><br><br>
+
+        <label for="confirmacion">Confirmar contraseña</label><br>
+        <input type="password" id="confirmacion" name="confirmacion"><br><br>
+
+        <button type="submit">
+            Crear cuenta
+        </button>
+
+    </form>
+
+    <hr>
+
+    <a th:href="@{/}">
+        ← Volver al inicio
+    </a>
+
+</body>
+
+</html>
