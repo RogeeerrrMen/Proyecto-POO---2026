@@ -11,14 +11,11 @@ public class HomeController {
         return "home";
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "login";
+    @GetMapping("/dashboard")
+    public String dashboard() {
+        return "dashboard";
     }
+
     
-    @GetMapping("/registro")
-    public String registro() {
-    return "registro";
-}
 
 }

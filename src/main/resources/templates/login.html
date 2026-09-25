@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Iniciar sesión</title>
@@ -7,21 +8,34 @@
 
 <body>
 
-    <h1>Iniciar sesión</h1>
+<h1>Iniciar sesión</h1>
 
-    <form>
+<p>
+Ingrese sus credenciales para acceder al sistema.
+</p>
 
-        <label>Correo electrónico</label><br>
-        <input type="email"><br><br>
+<hr>
 
-        <label>Contraseña</label><br>
-        <input type="password"><br><br>
+<form action="/login" method="post">
 
-        <button type="submit">
-            Iniciar sesión
-        </button>
+<label>Correo electrónico</label><br>
+<input type="email" name="correo"><br><br>
 
-    </form>
+<label>Contraseña</label><br>
+<input type="password" name="password"><br><br>
+
+<button type="submit">
+Iniciar sesión
+</button>
+
+</form>
+
+<hr>
+
+<a th:href="@{/}">
+← Volver al inicio
+</a>
 
 </body>
+
 </html>
