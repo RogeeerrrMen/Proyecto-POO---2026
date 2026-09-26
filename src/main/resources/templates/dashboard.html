@@ -2,41 +2,94 @@
 <html lang="es">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
     <meta charset="UTF-8">
     <title>Dashboard</title>
 </head>
 
 <body>
+ <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
 
-<h1>Sistema de Gestión de Pedidos</h1>
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/}">
+                Cerrar sesión
+            </a>
+        </nav>
+    </header>
 
-<p>
-Bienvenido al sistema.
-</p>
+    <main class="dashboard-container">
+        <header class="dashboard-heading">
+            <p class="eyebrow">TU ESPACIO DE TRABAJO</p>
+            <h1 class="card-title">Todo empieza con orden.</h1>
+            <p class="card-subtitle">
+                Un lugar para organizar el día a día de tu emprendimiento.
+            </p>
+        </header>
 
-<hr>
+        <section aria-labelledby="modulos-title">
+            <h2 class="section-title" id="modulos-title">
+                Tu emprendimiento
+            </h2>
 
-<h2>Módulos disponibles</h2>
+            <div class="dashboard-grid">
+                <article class="dashboard-card">
+                    <span class="module-number" aria-hidden="true">01</span>
+                    <h2>Clientes</h2>
+                    <p>
+                        Consulta los datos de quienes confían en tu negocio.
+                    </p>
+                    <span class="module-status">Próximamente</span>
+                </article>
 
-<ul>
+                <article class="dashboard-card">
+                    <span class="module-number" aria-hidden="true">02</span>
+                    <h2>Productos</h2>
+                    <p>
+                        Organiza los productos que ofrece tu emprendimiento.
+                    </p>
+                    <span class="module-status">Próximamente</span>
+                </article>
 
-<li>Clientes</li>
+                <article class="dashboard-card">
+                    <span class="module-number" aria-hidden="true">03</span>
+                    <h2>Pedidos</h2>
+                    <p>
+                        Da seguimiento a cada pedido desde un solo lugar.
+                    </p>
+                    <span class="module-status">Próximamente</span>
+                </article>
 
-<li>Productos</li>
+                <article class="dashboard-card">
+                    <span class="module-number" aria-hidden="true">04</span>
+                    <h2>Calendario</h2>
+                    <p>
+                        Ten presentes tus próximas entregas y compromisos.
+                    </p>
+                    <span class="module-status">Próximamente</span>
+                </article>
 
-<li>Pedidos</li>
+                <article class="dashboard-card">
+                    <span class="module-number" aria-hidden="true">05</span>
+                    <h2>Configuración</h2>
+                    <p>
+                        Administra la información de tu emprendimiento.
+                    </p>
+                    <span class="module-status">Próximamente</span>
+                </article>
+            </div>
+        </section>
 
-<li>Calendario</li>
-
-<li>Configuración</li>
-
-</ul>
-
-<hr>
-
-<a th:href="@{/}">
-Cerrar sesión
-</a>
+        <footer class="footer-info">
+            <p>Universidad del Valle de Guatemala</p>
+            <small>
+                Proyecto de Programación Orientada a Objetos · Grupo 12
+            </small>
+        </footer>
+    </main>
 
 </body>
 

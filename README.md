@@ -22,6 +22,31 @@ La aplicación busca centralizar la información del emprendimiento para facilit
 
 ---
 
+## Ejecutar el programa
+
+Desde la terminal, dentro de la carpeta del proyecto:
+
+**Git Bash:**
+```bash
+./mvnw.cmd spring-boot:run
+```
+
+**PowerShell:**
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+**CMD:**
+```cmd
+mvnw.cmd spring-boot:run
+```
+
+Abrir: http://localhost:8080
+
+Para detener el programa: `Ctrl + C`.
+
+---
+
 # Tecnologías utilizadas
 
 ## Backend
