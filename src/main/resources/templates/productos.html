@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css(v=2)}">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/dashboard}">
+                Volver al inicio
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        <header class="products-heading">
+            <div>
+                <p class="eyebrow">TU CATÁLOGO</p>
+                <h1 class="card-title">Tus productos.</h1>
+                <p class="card-subtitle">
+                    Todo lo que ofrece tu emprendimiento, en un solo lugar.
+                </p>
+            </div>
+
+            <a class="btn btn-primary" th:href="@{/productos/nuevo}">
+                Agregar producto
+            </a>
+        </header>
+
+        <section class="empty-state"
+                 th:if="${#lists.isEmpty(productos)}"
+                 aria-labelledby="empty-title">
+            <h2 id="empty-title">Aquí comienza tu catálogo.</h2>
+            <p>
+                Todavía no hay productos registrados.
+                Selecciona “Agregar producto” para crear el primero.
+            </p>
+        </section>
+
+        <div class="table-container"
+             th:unless="${#lists.isEmpty(productos)}"
+             role="region"
+             aria-label="Listado de productos"
+             tabindex="0">
+            <table class="products-table">
+                <caption class="visually-hidden">
+                    Productos registrados en el catálogo
+                </caption>
+
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col" class="price-cell">Precio</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr th:each="producto : ${productos}">
+                        <td th:text="${producto.id}"></td>
+                        <td class="product-name"
+                            th:text="${producto.nombre}"></td>
+                        <td class="product-description"
+                            th:text="${producto.descripcion}"></td>
+                        <td class="price-cell"
+                            th:text="${#numbers.formatDecimal(producto.precio, 1, 2)}"></td>
+                        <td>
+                            <span class="product-status"
+                                  th:classappend="${producto.activo} ? 'status-active' : 'status-inactive'"
+                                  th:text="${producto.activo} ? 'Activo' : 'Inactivo'">
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

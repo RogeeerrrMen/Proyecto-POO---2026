@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar producto</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/productos}">
+                Volver a productos
+            </a>
+        </nav>
+    </header>
+
+    <main class="main-container">
+        <section class="card" aria-labelledby="producto-title">
+            <p class="eyebrow">TU CATÁLOGO</p>
+
+            <h1 class="card-title" id="producto-title">
+                Un nuevo producto.
+            </h1>
+
+            <p class="card-subtitle">
+                Agrega los detalles de lo que ofrece tu emprendimiento.
+            </p>
+
+            <form th:action="@{/productos}"
+                  th:object="${producto}"
+                  method="post">
+
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text"
+                           id="nombre"
+                           th:field="*{nombre}"
+                           placeholder="Nombre del producto"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción (opcional)</label>
+                    <textarea id="descripcion"
+                              th:field="*{descripcion}"
+                              rows="4"
+                              placeholder="Describe sus características"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="precio">Precio</label>
+                    <input type="number"
+                           id="precio"
+                           th:field="*{precio}"
+                           step="0.01"
+                           min="0"
+                           placeholder="0.00"
+                           required>
+                </div>
+
+                <button class="btn btn-primary" type="submit">
+                    Guardar producto
+                </button>
+            </form>
+
+            <p class="form-footer">
+                <a th:href="@{/productos}">Cancelar y volver al listado</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>
