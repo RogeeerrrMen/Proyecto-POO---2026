@@ -29,14 +29,16 @@
                 Completa tus datos y los de tu emprendimiento.
             </p>
 
-            <form th:action="@{/registro}" method="post">
+            <form th:action="@{/registro}" 
+                  th:object="${registroUsuarioDTO}"
+                  method="post">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="nombre">Nombre</label>
                         <input
                             type="text"
                             id="nombre"
-                            name="nombre"
+                            th:field="*{nombre}"
                             placeholder="Tu nombre"
                             autocomplete="given-name"
                             required>
@@ -47,7 +49,7 @@
                         <input
                             type="text"
                             id="apellido"
-                            name="apellido"
+                            th:field="*{apellido}"
                             placeholder="Tu apellido"
                             autocomplete="family-name"
                             required>
@@ -59,7 +61,7 @@
                     <input
                         type="email"
                         id="correo"
-                        name="correo"
+                        th:field="*{correo}"
                         placeholder="nombre@ejemplo.com"
                         autocomplete="email"
                         required>
@@ -72,7 +74,7 @@
                     <input
                         type="text"
                         id="emprendimiento"
-                        name="emprendimiento"
+                        th:field="*{emprendimiento}"
                         placeholder="¿Cómo se llama tu negocio?"
                         autocomplete="organization"
                         required>
@@ -84,18 +86,18 @@
                         <input
                             type="password"
                             id="password"
-                            name="password"
+                            th:field="*{password}"
                             placeholder="Crea una contraseña"
                             autocomplete="new-password"
                             required>
                     </div>
 
                     <div class="form-group">
-                        <label for="confirmacion">Confirmar contraseña</label>
+                        <label for="confirmarPassword">Confirmar contraseña</label>
                         <input
                             type="password"
-                            id="confirmacion"
-                            name="confirmacion"
+                            id="confirmarPassword"
+                            th:field="*{confirmarPassword}"
                             placeholder="Repítela aquí"
                             autocomplete="new-password"
                             required>
