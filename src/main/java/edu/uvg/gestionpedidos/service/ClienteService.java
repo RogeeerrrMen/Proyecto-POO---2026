@@ -59,5 +59,9 @@ public class ClienteService {
         if (telefono == null || telefono.isBlank()) {
             throw new IllegalArgumentException("El teléfono es obligatorio.");
         }
+
+        if (!telefono.trim().matches("\\+?[0-9]+")) {
+            throw new IllegalArgumentException("El teléfono debe contener solo números, con un + opcional al inicio.");
+        }
     }
 }

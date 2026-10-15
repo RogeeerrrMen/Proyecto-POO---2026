@@ -62,10 +62,18 @@
                         type="tel"
                         id="telefono"
                         th:field="*{telefono}"
-                        placeholder="Número de contacto"
+                        placeholder="Número de contacto."
                         autocomplete="tel"
+                        pattern="\+?[0-9]+"
+                        title="Ingresa solo números."
+                        aria-describedby="telefono-ayuda"
                         required
                     >
+
+                    <small id="telefono-ayuda" class="cliente-ayuda">
+                        Si el teléfono es de otro país, incluye + y el código de país al inicio.
+                    </small>
+
                 </div>
 
                 <button class="btn btn-primary" type="submit">

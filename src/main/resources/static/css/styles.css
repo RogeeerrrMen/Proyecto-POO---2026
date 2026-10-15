@@ -638,3 +638,8 @@ a {
   border-radius: 9px;
   overflow-wrap: anywhere;
 }
+
+.cliente-ayuda {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
