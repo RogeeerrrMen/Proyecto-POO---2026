@@ -22,6 +22,18 @@ La aplicación busca centralizar la información del emprendimiento para facilit
 
 ---
 
+## Requisitos y configuración
+
+- Instalar JDK 25 y PostgreSQL 17.
+- Crear la base de datos `ProyectoPOO2026`.
+- Configurar la conexión y la contraseña local en
+  `src/main/resources/application.properties`.
+- No incluir la contraseña personal en commits.
+- pgAdmin es opcional para administrar la base de datos.
+
+Hibernate crea o actualiza las tablas al iniciar la aplicación.
+No es necesario instalar Maven por separado, ya que se incluye Maven Wrapper.
+
 ## Ejecutar el programa
 
 Desde la terminal, dentro de la carpeta del proyecto:
@@ -54,6 +66,9 @@ Para detener el programa: `Ctrl + C`.
 - Java
 - Spring Boot
 - Spring MVC
+- Spring Data JPA
+- Hibernate
+- PostgreSQL
 
 ## Frontend
 
@@ -66,8 +81,6 @@ Para detener el programa: `Ctrl + C`.
 - Maven
 - Git
 - GitHub
-
-> PostgreSQL y Spring Data JPA serán incorporados en las siguientes iteraciones del proyecto.
 
 ---
 
@@ -83,11 +96,16 @@ Actualmente se encuentra implementado:
 - Configuración inicial de Spring Boot.
 - Integración de Thymeleaf.
 - Página principal del sistema.
-- Flujo de inicio de sesión.
-- Flujo de registro.
-- Dashboard inicial.
-- Navegación entre vistas mediante Spring MVC.
 - Arquitectura base del proyecto.
+- Formulario de inicio de sesión y navegación al Dashboard.
+- Registro de usuarios con almacenamiento en PostgreSQL.
+- Dashboard con acceso a Clientes y Productos.
+- Registro y listado básico de productos.
+- Gestión de clientes: registro, listado, búsqueda y edición.
+- Persistencia de clientes mediante Spring Data JPA e Hibernate.
+- Validación de campos obligatorios y formato del teléfono.
+- Navegación entre vistas mediante Spring MVC.
+- Diseño visual compartido mediante CSS.
 
 ---
 
@@ -109,11 +127,28 @@ Actualmente se encuentra implementado:
 - Formulario para creación de cuenta.
 - Captura de información básica del usuario y del emprendimiento.
 - Navegación hacia Dashboard.
+- Almacenamiento de usuarios en PostgreSQL.
 
 ## Dashboard
 
 - Vista principal del sistema.
 - Presentación de los módulos disponibles para futuras iteraciones.
+- Acceso a los módulos de Clientes y Productos.
+
+## Clientes
+
+- Registro con nombre y teléfono.
+- Identificador generado automáticamente.
+- Listado y búsqueda por nombre o teléfono.
+- Edición de datos de contacto.
+- Validación de campos obligatorios y formato del teléfono.
+- Almacenamiento y actualización en PostgreSQL.
+
+## Productos
+
+- Registro de productos mediante formulario.
+- Listado de productos.
+- Almacenamiento temporal en memoria.
 
 ---
 
@@ -121,12 +156,9 @@ Actualmente se encuentra implementado:
 
 Las siguientes funcionalidades serán incorporadas durante el desarrollo del proyecto:
 
-- Persistencia con PostgreSQL.
-- Spring Data JPA.
 - Gestión de usuarios.
 - Gestión de emprendimientos.
-- Gestión de productos.
-- Gestión de clientes.
+- Persistencia y ampliación de la gestión de productos.
 - Gestión de pedidos.
 - Estados de pedidos.
 - Calendario.
