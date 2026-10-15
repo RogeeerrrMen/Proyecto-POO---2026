@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de clientes</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/dashboard}">
+                Volver al inicio
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        <header class="products-heading">
+            <div>
+                <p class="eyebrow">TU EMPRENDIMIENTO</p>
+                <h1 class="card-title">Tus clientes.</h1>
+                <p class="card-subtitle">
+                    Consulta y actualiza sus datos de contacto.
+                </p>
+            </div>
+
+            <a class="btn btn-primary" th:href="@{/clientes/nuevo}">
+                Registrar cliente
+            </a>
+        </header>
+
+        <form class="clientes-search"
+              th:action="@{/clientes}"
+              method="get">
+
+            <div class="form-group">
+                <label for="busqueda">Buscar por nombre o teléfono</label>
+                <input
+                    type="search"
+                    id="busqueda"
+                    name="busqueda"
+                    th:value="${busqueda}"
+                    placeholder="Escribe un nombre o teléfono"
+                >
+            </div>
+
+            <div class="clientes-actions">
+                <button class="btn btn-primary" type="submit">
+                    Buscar
+                </button>
+
+                <a class="btn btn-secondary" th:href="@{/clientes}">
+                    Ver todos
+                </a>
+            </div>
+        </form>
+
+        <section class="empty-state"
+                 th:if="${#lists.isEmpty(clientes)}">
+            <h2>No se encontraron clientes.</h2>
+            <p>
+                Registra un cliente o intenta con otra búsqueda.
+            </p>
+        </section>
+
+        <div class="table-container"
+             th:unless="${#lists.isEmpty(clientes)}">
+
+            <table class="products-table">
+                <caption class="visually-hidden">
+                    Clientes y sus datos de contacto
+                </caption>
+
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Teléfono</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr th:each="cliente : ${clientes}">
+                        <td th:text="${cliente.id}"></td>
+                        <td class="product-name"
+                            th:text="${cliente.nombre}"></td>
+                        <td th:text="${cliente.telefono}"></td>
+                        <td>
+                            <a class="btn btn-secondary"
+                               th:href="@{/clientes/{id}/editar(id=${cliente.id})}">
+                                Editar
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <footer class="footer-info">
+            <p>Universidad del Valle de Guatemala</p>
+            <small>
+                Proyecto de Programación Orientada a Objetos · Grupo 12
+            </small>
+        </footer>
+    </main>
+</body>
+
+</html>
