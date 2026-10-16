@@ -36,11 +36,22 @@ public class AuthController {
     }
 
     @PostMapping("/registro")
-    public String registrarCuenta(@ModelAttribute RegistroUsuarioDTO datos) {
+    public String registrarCuenta(@ModelAttribute("registroUsuarioDTO") RegistroUsuarioDTO datos,Model model) {
 
-        usuarioService.registrarUsuario(datos);
-        return "dashboard";
+        try {
 
+            usuarioService.registrarUsuario(datos);
+            return "redirect:/dashboard";
+
+        } catch (IllegalArgumentException e) {
+
+            model.addAttribute("error", e.getMessage());
+
+            datos.setPassword(null);
+            datos.setConfirmarPassword(null);
+            
+            return "registro";
+        }
     }
 
     @PostMapping("/login")
