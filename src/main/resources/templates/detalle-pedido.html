@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del pedido</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css(v=2)}">
+</head>
+
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/pedidos}">
+                Volver a pedidos
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container pedido-detalle">
+        <header class="pedido-encabezado">
+            <div>
+                <p class="eyebrow">TUS PEDIDOS</p>
+                <h1 class="card-title">Detalle del pedido</h1>
+
+                <p class="pedido-codigo">
+                    Código:
+                    <span th:text="${pedido.codigo}"></span>
+                </p>
+            </div>
+
+            <span class="pedido-estado"
+                th:text="${pedido.estado}">
+            </span>
+        </header>
+
+<p class="pedido-exito"
+   th:if="${exito}"
+   th:text="${exito}"
+   role="status"></p>
+
+        <section aria-labelledby="informacion-title">
+            <h2 id="informacion-title">Información general</h2>
+
+            <dl>
+                <dt>Cliente</dt>
+                <dd th:text="${pedido.cliente.nombre}"></dd>
+
+                <dt>Teléfono del cliente</dt>
+                <dd th:text="${pedido.cliente.telefono}"></dd>
+
+                <dt>Fecha de registro</dt>
+                <dd th:text="${#temporals.format(
+                    pedido.fechaPedido, 'dd/MM/yyyy HH:mm')}"></dd>
+
+            </dl>
+        </section>
+
+        <section aria-labelledby="productos-title">
+            <h2 id="productos-title">Productos del pedido</h2>
+
+            <div class="table-container"
+                 role="region"
+                 aria-label="Productos del pedido"
+                 tabindex="0">
+
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col" class="price-cell">
+                                Precio unitario
+                            </th>
+                            <th scope="col" class="price-cell">
+                                Subtotal
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr th:each="detalle : ${pedido.detalles}">
+                            <td th:text="${detalle.producto.nombre}"></td>
+                            <td th:text="${detalle.cantidad}"></td>
+
+                            <td class="price-cell"
+                                th:text="${#numbers.formatDecimal(
+                                    detalle.precioUnitario, 1, 2)}">
+                            </td>
+
+                            <td class="price-cell"
+                                th:text="${#numbers.formatDecimal(
+                                    detalle.subtotal, 1, 2)}">
+                            </td>
+                        </tr>
+                    </tbody>
+
+                    <tfoot>
+                        <tr>
+                            <th scope="row" colspan="3">Total</th>
+
+                            <td class="price-cell"
+                                th:text="${#numbers.formatDecimal(
+                                    pedido.total, 1, 2)}">
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <section aria-labelledby="entrega-title">
+            <h2 id="entrega-title">Datos de entrega</h2>
+
+            <dl>
+                <dt>Receptor</dt>
+                <dd th:text="${pedido.direccionEntrega.nombreReceptor}"></dd>
+
+                <dt>Teléfono</dt>
+                <dd th:text="${pedido.direccionEntrega.telefonoReceptor}"></dd>
+
+                <dt>Dirección</dt>
+                <dd th:text="${pedido.direccionEntrega.direccion}"></dd>
+
+                <dt>Referencias</dt>
+                <dd th:text="${pedido.direccionEntrega.referencias
+                    ?: 'Sin referencias'}"></dd>
+
+                <dt>Enlace de mapa</dt>
+                <dd th:text="${pedido.direccionEntrega.enlaceMapa
+                    ?: 'Sin enlace'}"></dd>
+            </dl>
+        </section>
+
+        <section aria-labelledby="fechas-title">
+            <h2 id="fechas-title">Fechas de planificación</h2>
+
+            <dl>
+                <dt>Preparación</dt>
+                <dd th:text="${pedido.fechaPreparacion != null
+                    ? #temporals.format(
+                        pedido.fechaPreparacion, 'dd/MM/yyyy HH:mm')
+                    : 'Sin programar'}"></dd>
+
+                <dt>Envío</dt>
+                <dd th:text="${pedido.fechaEnvio != null
+                    ? #temporals.format(
+                        pedido.fechaEnvio, 'dd/MM/yyyy HH:mm')
+                    : 'Sin programar'}"></dd>
+
+                <dt>Entrega</dt>
+                <dd th:text="${pedido.fechaEntrega != null
+                    ? #temporals.format(
+                        pedido.fechaEntrega, 'dd/MM/yyyy HH:mm')
+                    : 'Sin programar'}"></dd>
+            </dl>
+        </section>
+
+        <section aria-labelledby="observaciones-title">
+            <h2 id="observaciones-title">Observaciones</h2>
+
+            <p th:text="${pedido.observaciones
+                ?: 'Sin observaciones'}"></p>
+        </section>
+
+        <a class="btn btn-secondary" th:href="@{/pedidos}">
+            Volver a pedidos
+        </a>
+    </main>
+</body>
+
+</html>
