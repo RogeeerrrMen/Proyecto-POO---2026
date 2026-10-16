@@ -14,10 +14,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.NoSuchElementException;
 
-/**
- * Coordina las solicitudes HTTP de productos. No contiene reglas de negocio:
- * delega en ProductoService y muestra el resultado en las vistas.
- */
+
+//Da instrucciones a las solicitudes HTTP de productos. No contiene reglas de negocio:
+//delega en ProductoService y muestra el resultado en las vistas.
+ 
 @Controller
 public class ProductoController {
 

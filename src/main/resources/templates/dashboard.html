@@ -14,11 +14,11 @@
             Gestión de Pedidos
         </a>
 
-        <nav class="nav-links" aria-label="Navegación principal">
-            <a class="btn btn-secondary" th:href="@{/}">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn btn-secondary">
                 Cerrar sesión
-            </a>
-        </nav>
+            </button>
+        </form>
     </header>
 
     <main class="dashboard-container">
