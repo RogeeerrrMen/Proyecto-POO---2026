@@ -2,11 +2,11 @@ package edu.uvg.gestionpedidos.dto;
 
 import edu.uvg.gestionpedidos.entity.Producto;
 
-/**
- * Datos que viajan entre el formulario de productos y el Service.
- * Se usa en lugar de la entidad para que el formulario nunca pueda alterar
- * campos que no le corresponden (como el id o el estado activo).
- */
+
+//Datos que viajan entre el formulario de productos y el Service.
+//Se usa en lugar de la entidad para que el formulario nunca pueda alterar
+//campos que no le corresponden (como el id o el estado activo).
+
 public class ProductoDTO {
 
     private String nombre;

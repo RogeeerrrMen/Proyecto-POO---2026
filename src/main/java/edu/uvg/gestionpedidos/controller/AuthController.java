@@ -54,11 +54,6 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/login")
-    public String iniciarSesion() {
-
-        return "dashboard";
-
-    }
+    
 
 }

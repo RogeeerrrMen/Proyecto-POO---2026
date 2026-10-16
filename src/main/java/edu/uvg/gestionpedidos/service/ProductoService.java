@@ -10,19 +10,17 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-/**
- * Coordina los casos de uso de productos: registrar, modificar, consultar,
- * buscar y activar/desactivar. Las reglas propias del producto (como el precio
- * válido o el estado activo) viven en la entidad {@link Producto}.
- *
- * Errores que puede lanzar:
- * - IllegalArgumentException: los datos recibidos no son válidos.
- * - NoSuchElementException: el producto indicado no existe.
- */
+//Coordina los casos de uso de productos: registrar, modificar, consultar,buscar 
+//y activar/desactivar.
+
+//Errores que puede lanzar:
+//- IllegalArgumentException: los datos recibidos no son válidos.
+//- NoSuchElementException: el producto que se indica no existe.
+ 
 @Service
 public class ProductoService {
 
-    /** Deben coincidir con el largo de las columnas definido en la entidad Producto. */
+    // Deben coincidir con el largo de las columnas definido en la entidad Producto.
     static final int NOMBRE_MAX = 120;
     static final int DESCRIPCION_MAX = 500;
 
@@ -47,7 +45,7 @@ public class ProductoService {
         return productoRepository.findById(id);
     }
 
-    /** Busca por coincidencia parcial del nombre; sin texto devuelve todos los productos. */
+    // Busca por coincidencia parcial del nombre
     @Transactional(readOnly = true)
     public List<Producto> buscarProductosPorNombre(String texto) {
         if (texto == null || texto.isBlank()) {
@@ -56,7 +54,7 @@ public class ProductoService {
         return productoRepository.findByNombreContainingIgnoreCaseOrderByIdAsc(texto.trim());
     }
 
-    /** Registra un producto nuevo. Todo producto nuevo queda activo. */
+    //Registra un producto nuevo. Todo producto nuevo queda activo.
     @Transactional
     public Producto registrarProducto(ProductoDTO datos) {
         validar(datos);
@@ -68,7 +66,7 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
-    /** Modifica nombre, descripción y precio de un producto existente. No cambia su estado. */
+    //Modifica nombre, descripción y precio de un producto existente. No cambia su estado.
     @Transactional
     public Producto modificarProducto(Long id, ProductoDTO datos) {
         Producto producto = obtener(id);
@@ -80,7 +78,7 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
-    /** Vuelve a habilitar un producto desactivado. */
+    //Vuelve a habilitar un producto desactivado.
     @Transactional
     public Producto activarProducto(Long id) {
         Producto producto = obtener(id);
@@ -88,7 +86,7 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
-    /** Deshabilita un producto. No se elimina: sigue guardado y se puede reactivar. */
+    // Deshabilita un producto, pero se elimina
     @Transactional
     public Producto desactivarProducto(Long id) {
         Producto producto = obtener(id);

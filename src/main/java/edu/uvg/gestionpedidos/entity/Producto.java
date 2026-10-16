@@ -7,10 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/**
- * Representa los productos ofrecidos por el emprendimiento.
- * Los productos nunca se eliminan físicamente: se desactivan con {@link #desactivar()}.
- */
 @Entity
 @Table(name = "productos")
 public class Producto {
@@ -70,9 +66,7 @@ public class Producto {
         return activo;
     }
 
-    /**
-     * Cambia el precio del producto. Debe ser un número válido, mayor o igual a cero.
-     */
+    //Cambia el precio del producto. Debe ser un número válido, mayor o igual a cero.
     public void actualizarPrecio(double nuevoPrecio) {
         if (!Double.isFinite(nuevoPrecio) || nuevoPrecio < 0) {
             throw new IllegalArgumentException("El precio debe ser un número mayor o igual a cero.");
@@ -80,12 +74,12 @@ public class Producto {
         this.precio = nuevoPrecio;
     }
 
-    /** Habilita el producto. */
+    //Habilita el producto.
     public void activar() {
         this.activo = true;
     }
 
-    /** Deshabilita el producto. */
+    //Deshabilita el producto.
     public void desactivar() {
         this.activo = false;
     }
