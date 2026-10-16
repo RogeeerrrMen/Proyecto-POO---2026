@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import edu.uvg.gestionpedidos.model.Producto;
 
 public class Pedido {
 

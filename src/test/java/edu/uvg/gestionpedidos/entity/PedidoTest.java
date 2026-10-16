@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 
 import org.junit.jupiter.api.Test;
 
-import edu.uvg.gestionpedidos.model.Producto;
 
 import static org.junit.jupiter.api.Assertions.*;
 

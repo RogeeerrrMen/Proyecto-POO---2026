@@ -1,7 +1,6 @@
 package edu.uvg.gestionpedidos.entity;
 
 import java.math.BigDecimal;
-import edu.uvg.gestionpedidos.model.Producto;
 
 public class DetallePedido {
 
