@@ -5,9 +5,13 @@ import edu.uvg.gestionpedidos.entity.Usuario;
 import edu.uvg.gestionpedidos.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import java.util.regex.Pattern;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class UsuarioService {
+
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -65,6 +69,19 @@ public class UsuarioService {
         if (datos.getCorreo() == null || datos.getCorreo().trim().isEmpty()) {
 
             throw new IllegalArgumentException("El correo es obligatorio");
+        
+        }
+
+        String correo = datos.getCorreo().trim();
+
+        if (correo.length() > 255) {
+
+            throw new IllegalArgumentException("El correo no puede superar los 255 caracteres");
+        }
+
+        if (!EMAIL_PATTERN.matcher(correo).matches()) {
+
+            throw new IllegalArgumentException("El formato del correo no es válido");
         }
 
         if (datos.getPassword() == null || datos.getPassword().isBlank()) {
@@ -77,12 +94,22 @@ public class UsuarioService {
             throw new IllegalArgumentException("Las contraseñas no coinciden");
         }
 
-        String correo = datos.getCorreo().trim();
+        if (datos.getPassword().length() < 8) {
+
+            throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres");
+        }
+
+        if (datos.getPassword().getBytes(StandardCharsets.UTF_8).length > 72) {
+
+            throw new IllegalArgumentException("La contraseña no puede superar los 72 bytes UTF-8");
+        }
+
 
         if (usuarioRepository.existsByCorreoIgnoreCase(correo)) {
 
             throw new IllegalArgumentException("Ya existe una cuenta registrada con ese correo");
         }
+
     }
 
 }
