@@ -29,6 +29,10 @@
                 Completa tus datos y los de tu emprendimiento.
             </p>
 
+            <div th:if="${error}" class="form-error" role="alert">
+                <p th:text="${error}"></p>
+            </div>
+
             <form th:action="@{/registro}" 
                   th:object="${registroUsuarioDTO}"
                   method="post">
