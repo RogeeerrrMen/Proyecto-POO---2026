@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.mockito.ArgumentCaptor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class UsuarioServiceTest {
 
@@ -54,10 +55,11 @@ public class UsuarioServiceTest {
         assertEquals("Roger", guardado.getNombre());
         assertEquals("prueba@example.com", guardado.getCorreo());
 
-        assertNotEquals(
-                datos.getPassword(),
-                guardado.getPasswordHash()
-        );
+        assertNotEquals(datos.getPassword(),guardado.getPasswordHash());
+
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        assertTrue(encoder.matches(datos.getPassword(),guardado.getPasswordHash()));
     }
 
     @Test
