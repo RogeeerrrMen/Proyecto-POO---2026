@@ -1,15 +1,34 @@
-package edu.uvg.gestionpedidos.model;
+package edu.uvg.gestionpedidos.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * Representa los productos ofrecidos por el emprendimiento.
- * Por ahora es un objeto en memoria: todavía no hay Repository ni base de datos.
+ * Los productos nunca se eliminan físicamente: se desactivan con {@link #desactivar()}.
  */
+@Entity
+@Table(name = "productos")
 public class Producto {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 120)
     private String nombre;
+
+    @Column(length = 500)
     private String descripcion;
+
+    @Column(nullable = false)
     private double precio;
+
+    @Column(nullable = false)
     private boolean activo;
 
     public Producto() {
@@ -52,11 +71,11 @@ public class Producto {
     }
 
     /**
-     * Cambia el precio del producto.
+     * Cambia el precio del producto. Debe ser un número válido, mayor o igual a cero.
      */
     public void actualizarPrecio(double nuevoPrecio) {
-        if (nuevoPrecio < 0) {
-            throw new IllegalArgumentException("El precio no puede ser negativo.");
+        if (!Double.isFinite(nuevoPrecio) || nuevoPrecio < 0) {
+            throw new IllegalArgumentException("El precio debe ser un número mayor o igual a cero.");
         }
         this.precio = nuevoPrecio;
     }
