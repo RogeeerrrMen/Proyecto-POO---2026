@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productos</title>
     <link rel="stylesheet" th:href="@{/css/styles.css(v=2)}">
+    <link rel="stylesheet" th:href="@{/css/productos.css}">
 </head>
 <body>
     <header class="navbar">
@@ -34,14 +35,43 @@
             </a>
         </header>
 
+        <p class="alert alert-success" role="status"
+           th:if="${mensaje}" th:text="${mensaje}"></p>
+        <p class="alert alert-error" role="alert"
+           th:if="${error}" th:text="${error}"></p>
+
+        <form class="search-form" th:action="@{/productos/buscar}" method="get" role="search">
+            <label class="visually-hidden" for="busqueda">Buscar productos por nombre</label>
+            <input type="search"
+                   id="busqueda"
+                   name="nombre"
+                   th:value="${busqueda}"
+                   placeholder="Buscar por nombre">
+            <button class="btn btn-secondary" type="submit">Buscar</button>
+            <a class="btn btn-secondary"
+               th:if="${busqueda != null and !#strings.isEmpty(busqueda)}"
+               th:href="@{/productos}">
+                Ver todos
+            </a>
+        </form>
+
         <section class="empty-state"
                  th:if="${#lists.isEmpty(productos)}"
                  aria-labelledby="empty-title">
-            <h2 id="empty-title">Aquí comienza tu catálogo.</h2>
-            <p>
-                Todavía no hay productos registrados.
-                Selecciona “Agregar producto” para crear el primero.
-            </p>
+            <th:block th:if="${busqueda != null and !#strings.isEmpty(busqueda)}">
+                <h2 id="empty-title">Sin resultados.</h2>
+                <p>
+                    No encontramos productos que coincidan con
+                    “<span th:text="${busqueda}"></span>”.
+                </p>
+            </th:block>
+            <th:block th:unless="${busqueda != null and !#strings.isEmpty(busqueda)}">
+                <h2 id="empty-title">Aquí comienza tu catálogo.</h2>
+                <p>
+                    Todavía no hay productos registrados.
+                    Selecciona “Agregar producto” para crear el primero.
+                </p>
+            </th:block>
         </section>
 
         <div class="table-container"
@@ -61,11 +91,13 @@
                         <th scope="col">Descripción</th>
                         <th scope="col" class="price-cell">Precio</th>
                         <th scope="col">Estado</th>
+                        <th scope="col">Acciones</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    <tr th:each="producto : ${productos}">
+                    <tr th:each="producto : ${productos}"
+                        th:classappend="${producto.activo} ? '' : 'row-inactive'">
                         <td th:text="${producto.id}"></td>
                         <td class="product-name"
                             th:text="${producto.nombre}"></td>
@@ -78,6 +110,35 @@
                                   th:classappend="${producto.activo} ? 'status-active' : 'status-inactive'"
                                   th:text="${producto.activo} ? 'Activo' : 'Inactivo'">
                             </span>
+                        </td>
+                        <td class="actions-cell">
+                            <a class="btn btn-secondary btn-small"
+                               th:href="@{/productos/{id}/editar(id=${producto.id})}"
+                               th:attr="aria-label=${'Editar ' + producto.nombre}">
+                                Editar
+                            </a>
+
+                            <form class="inline-form"
+                                  th:if="${producto.activo}"
+                                  th:action="@{/productos/{id}/desactivar(id=${producto.id})}"
+                                  method="post">
+                                <button class="btn btn-secondary btn-small"
+                                        type="submit"
+                                        th:attr="aria-label=${'Desactivar ' + producto.nombre}">
+                                    Desactivar
+                                </button>
+                            </form>
+
+                            <form class="inline-form"
+                                  th:unless="${producto.activo}"
+                                  th:action="@{/productos/{id}/activar(id=${producto.id})}"
+                                  method="post">
+                                <button class="btn btn-primary btn-small"
+                                        type="submit"
+                                        th:attr="aria-label=${'Activar ' + producto.nombre}">
+                                    Activar
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 </tbody>
