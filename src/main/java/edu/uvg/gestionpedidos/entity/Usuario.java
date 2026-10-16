@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "usuarios")
@@ -12,11 +13,21 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Long id;
+
+    @Column(nullable = false, length = 255)
     private String nombre;
+
+    @Column(nullable = false, length = 100)
     private String apellido;
+
+    @Column(nullable = false, length = 255)
     private String correo;
+
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
+        
 
     public Usuario() {
 
