@@ -1,0 +1,82 @@
+/* Estilos propios del módulo de productos.
+   Se cargan después de styles.css y reutilizan sus variables (colores, bordes, radios). */
+
+/* Mensajes de confirmación y de error */
+.alert {
+  margin: 0 0 24px;
+  padding: 14px 18px;
+  border: 1px solid;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.alert-success {
+  background: #e8efe7;
+  border-color: #c5d3c4;
+  color: var(--primary-hover);
+}
+
+.alert-error {
+  background: #f8ebe8;
+  border-color: #e5c4bd;
+  color: #8a3a2c;
+}
+
+/* Buscador del listado */
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.search-form input[type="search"] {
+  flex: 1 1 260px;
+  min-height: 46px;
+  padding: 10px 14px;
+  background: #fdfdfb;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  font: inherit;
+}
+
+.search-form input[type="search"]::placeholder {
+  color: #747c75;
+}
+
+.search-form input[type="search"]:focus {
+  border-color: var(--primary-color);
+}
+
+/* Acciones por fila (editar, activar, desactivar) */
+.actions-cell {
+  white-space: nowrap;
+}
+
+.actions-cell > * {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.actions-cell > *:last-child {
+  margin-right: 0;
+}
+
+.inline-form {
+  margin: 0;
+}
+
+.btn-small {
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+
+/* Los productos desactivados se ven atenuados en el listado */
+.row-inactive .product-name,
+.row-inactive .price-cell {
+  color: var(--text-muted);
+}

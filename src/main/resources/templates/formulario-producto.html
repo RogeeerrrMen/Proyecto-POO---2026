@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agregar producto</title>
+    <title th:text="${productoId == null} ? 'Agregar producto' : 'Editar producto'">Agregar producto</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/productos.css}">
 </head>
 <body>
     <header class="navbar">
@@ -23,15 +24,20 @@
         <section class="card" aria-labelledby="producto-title">
             <p class="eyebrow">TU CATÁLOGO</p>
 
-            <h1 class="card-title" id="producto-title">
+            <h1 class="card-title" id="producto-title"
+                th:text="${productoId == null} ? 'Un nuevo producto.' : 'Edita tu producto.'">
                 Un nuevo producto.
             </h1>
 
-            <p class="card-subtitle">
+            <p class="card-subtitle"
+               th:text="${productoId == null} ? 'Agrega los detalles de lo que ofrece tu emprendimiento.' : 'Actualiza los detalles de este producto.'">
                 Agrega los detalles de lo que ofrece tu emprendimiento.
             </p>
 
-            <form th:action="@{/productos}"
+            <p class="alert alert-error" role="alert"
+               th:if="${error}" th:text="${error}"></p>
+
+            <form th:action="${productoId == null} ? @{/productos} : @{/productos/{id}(id=${productoId})}"
                   th:object="${producto}"
                   method="post">
 
@@ -41,6 +47,7 @@
                            id="nombre"
                            th:field="*{nombre}"
                            placeholder="Nombre del producto"
+                           maxlength="120"
                            required>
                 </div>
 
@@ -49,6 +56,7 @@
                     <textarea id="descripcion"
                               th:field="*{descripcion}"
                               rows="4"
+                              maxlength="500"
                               placeholder="Describe sus características"></textarea>
                 </div>
 
@@ -63,7 +71,8 @@
                            required>
                 </div>
 
-                <button class="btn btn-primary" type="submit">
+                <button class="btn btn-primary" type="submit"
+                        th:text="${productoId == null} ? 'Guardar producto' : 'Guardar cambios'">
                     Guardar producto
                 </button>
             </form>
