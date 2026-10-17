@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gastos</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/productos.css}">
+    <link rel="stylesheet" th:href="@{/css/gastos.css}">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/dashboard}">
+                Volver al inicio
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        <header class="products-heading">
+            <div>
+                <p class="eyebrow">LAS FINANZAS DE TU NEGOCIO</p>
+                <h1 class="card-title">Tus gastos.</h1>
+                <p class="card-subtitle">
+                    Consulta y administra los gastos de tu emprendimiento.
+                </p>
+            </div>
+
+            <a class="btn btn-primary" th:href="@{/gastos/nuevo}">
+                Registrar gasto
+            </a>
+        </header>
+
+        <p class="alert alert-success" role="status"
+           th:if="${mensaje}" th:text="${mensaje}"></p>
+
+        <p class="alert alert-error" role="alert"
+           th:if="${error}" th:text="${error}"></p>
+
+        <form class="gastos-filtros" th:action="@{/gastos}" method="get"
+              aria-label="Consultar gastos por período">
+
+            <div class="form-group">
+                <label for="inicio">Fecha inicial</label>
+                <input type="date" id="inicio" name="inicio"
+                       th:value="${inicio}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="fin">Fecha final</label>
+                <input type="date" id="fin" name="fin"
+                       th:value="${fin}" required>
+            </div>
+
+            <div class="gastos-acciones">
+                <button class="btn btn-primary" type="submit">
+                    Consultar período
+                </button>
+
+                <a class="btn btn-secondary" th:href="@{/gastos}">
+                    Ver todos
+                </a>
+            </div>
+        </form>
+
+        <section class="gastos-resumen" th:if="${total != null}"
+                 aria-label="Total de gastos del período">
+            <p>Total del período seleccionado</p>
+            <strong th:text="${'Q ' + #numbers.formatDecimal(
+                    total, 1, 'COMMA', 2, 'POINT')}">
+                Q 0.00
+            </strong>
+        </section>
+
+        <section class="empty-state"
+                 th:if="${error == null and #lists.isEmpty(gastos)}">
+            <h2 th:text="${total != null}
+                    ? 'Sin gastos en este período.'
+                    : 'Todavía no hay gastos registrados.'">
+            </h2>
+            <p>
+                Puedes registrar un gasto nuevo o consultar otro período.
+            </p>
+        </section>
+
+        <div class="table-container"
+             th:unless="${#lists.isEmpty(gastos)}"
+             role="region"
+             aria-label="Listado de gastos"
+             tabindex="0">
+
+            <table class="products-table">
+                <caption class="visually-hidden">
+                    Gastos registrados
+                </caption>
+
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col" class="price-cell">Monto</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr th:each="gasto : ${gastos}">
+                        <td th:text="${gasto.id}"></td>
+
+                        <td class="gasto-fecha"
+                            th:text="${#temporals.format(
+                                    gasto.fecha, 'dd/MM/yyyy')}"></td>
+
+                        <td class="gasto-descripcion"
+                            th:text="${gasto.descripcion}"></td>
+
+                        <td class="price-cell"
+                            th:text="${'Q ' + #numbers.formatDecimal(
+                                    gasto.monto, 1, 'COMMA', 2, 'POINT')}">
+                        </td>
+
+                        <td class="actions-cell">
+                            <a class="btn btn-secondary btn-small"
+                               th:href="@{/gastos/{id}(id=${gasto.id})}"
+                               th:attr="aria-label=${'Consultar gasto '
+                                       + gasto.id}">
+                                Consultar
+                            </a>
+
+                            <a class="btn btn-secondary btn-small"
+                               th:href="@{/gastos/{id}/editar(id=${gasto.id})}"
+                               th:attr="aria-label=${'Editar gasto '
+                                       + gasto.id}">
+                                Editar
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>
