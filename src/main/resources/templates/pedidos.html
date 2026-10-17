@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/dashboard}">
+                Volver al inicio
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        <header class="products-heading">
+            <div>
+                <p class="eyebrow">TU EMPRENDIMIENTO</p>
+                <h1 class="card-title">Tus pedidos.</h1>
+                <p class="card-subtitle">
+                    Consulta los pedidos y sus detalles.
+                </p>
+            </div>
+
+            <a class="btn btn-primary" th:href="@{/pedidos/nuevo}">
+                Registrar pedido
+            </a>
+        </header>
+
+        <section class="empty-state"
+                 th:if="${#lists.isEmpty(pedidos)}">
+            <h2>Todavía no hay pedidos registrados.</h2>
+            <p>Selecciona “Registrar pedido” para crear el primero.</p>
+        </section>
+
+        <div class="table-container"
+             th:unless="${#lists.isEmpty(pedidos)}"
+             role="region"
+             aria-label="Listado de pedidos"
+             tabindex="0">
+
+            <table class="products-table">
+                <caption class="visually-hidden">
+                    Pedidos registrados
+                </caption>
+
+                <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Fecha de registro</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col" class="price-cell">Total</th>
+                        <th scope="col">Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr th:each="pedido : ${pedidos}">
+                        <td th:text="${pedido.codigo}"></td>
+
+                        <td th:text="${pedido.cliente.nombre}"></td>
+
+                        <td th:text="${#temporals.format(
+                            pedido.fechaPedido, 'dd/MM/yyyy HH:mm')}">
+                        </td>
+
+                        <td th:text="${pedido.estado}"></td>
+
+                        <td class="price-cell"
+                            th:text="${#numbers.formatDecimal(
+                                pedido.total, 1, 2)}">
+                        </td>
+
+                        <td>
+                            <a class="btn btn-secondary"
+                               th:href="@{/pedidos/{id}(id=${pedido.id})}">
+                                Ver detalle
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+
+</html>

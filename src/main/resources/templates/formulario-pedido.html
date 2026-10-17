@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar pedido</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css(v=3)}">
+</head>
+
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/pedidos}">
+                Volver a pedidos
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container pedido-formulario">
+        <section aria-labelledby="pedido-title">
+            <p class="eyebrow">TUS PEDIDOS</p>
+
+            <h1 class="card-title" id="pedido-title">
+                Registrar pedido
+            </h1>
+
+            <p class="card-subtitle">
+                Selecciona un cliente y los productos de su pedido.
+            </p>
+
+            <p class="cliente-error"
+               th:if="${error}"
+               th:text="${error}"
+               role="alert"></p>
+
+            <p th:if="${#lists.isEmpty(clientes)}">
+                Necesitas
+                <a th:href="@{/clientes/nuevo}">registrar un cliente</a>
+                antes de crear un pedido.
+            </p>
+
+            <p th:if="${#lists.isEmpty(productos)}">
+                No hay productos activos disponibles.
+                <a th:href="@{/productos}">Revisar productos</a>.
+            </p>
+
+            <form th:action="@{/pedidos}"
+                  th:object="${pedidoDTO}"
+                  method="post">
+
+                <h2>Cliente</h2>
+
+                <div class="form-group">
+                    <label for="clienteId">Cliente del pedido</label>
+
+                    <select id="clienteId"
+                            th:field="*{clienteId}"
+                            required>
+                        <option value="">Selecciona un cliente</option>
+
+                        <option th:each="cliente : ${clientes}"
+                                th:value="${cliente.id}"
+                                th:text="${cliente.nombre + ' — ' + cliente.telefono}">
+                        </option>
+                    </select>
+                </div>
+
+                <h2>Productos</h2>
+
+                <div class="table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Acción</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="detalles">
+                            <tr th:each="detalle, fila : *{detalles}">
+                                <td>
+                                    <div class="form-group">
+                                        <select
+                                            data-campo="productoId"
+                                            aria-label="Producto"
+                                            th:field="*{detalles[__${fila.index}__].productoId}"
+                                            required>
+
+                                            <option value="">
+                                                Selecciona un producto
+                                            </option>
+
+                                            <option
+                                                th:each="producto : ${productos}"
+                                                th:value="${producto.id}"
+                                                th:attr="data-precio=${producto.precio}"
+                                                th:text="${producto.nombre + ' — '
+                                                    + #numbers.formatDecimal(producto.precio, 1, 2)}">
+                                            </option>
+                                        </select>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="form-group">
+                                        <input
+                                            type="number"
+                                            data-campo="cantidad"
+                                            aria-label="Cantidad"
+                                            th:field="*{detalles[__${fila.index}__].cantidad}"
+                                            min="1"
+                                            max="2147483647"
+                                            step="1"
+                                            required>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <button type="button"
+                                            class="btn btn-secondary"
+                                            data-quitar>
+                                        Quitar
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="button"
+                        id="agregar-producto"
+                        class="btn btn-secondary"
+                        th:disabled="${#lists.isEmpty(productos)}">
+                    Agregar producto
+                </button>
+
+                <p role="status" aria-live="polite">
+                    Total estimado:
+                    <strong id="total-estimado">0.00</strong>
+                </p>
+
+                <p class="cliente-ayuda">
+                    El total definitivo se calcula al guardar,
+                    con los precios vigentes del catálogo.
+                </p>
+
+                <h2>Entrega</h2>
+
+                <div class="form-group">
+                    <label for="nombreReceptor">Nombre del receptor</label>
+                    <input type="text"
+                           id="nombreReceptor"
+                           th:field="*{nombreReceptor}"
+                           maxlength="255"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefonoReceptor">
+                        Teléfono del receptor
+                    </label>
+
+                    <input type="tel"
+                           id="telefonoReceptor"
+                           th:field="*{telefonoReceptor}"
+                           pattern="\+?[0-9]+"
+                           title="Ingresa números con un + opcional al inicio."
+                           maxlength="255"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="direccion">Dirección de entrega</label>
+                    <textarea id="direccion"
+                              th:field="*{direccion}"
+                              rows="3"
+                              maxlength="255"
+                              required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="referencias">Referencias (opcional)</label>
+                    <textarea id="referencias"
+                              th:field="*{referencias}"
+                              rows="2"
+                              maxlength="255"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="enlaceMapa">
+                        Enlace de Google Maps (opcional)
+                    </label>
+
+                    <input type="url"
+                           id="enlaceMapa"
+                           th:field="*{enlaceMapa}"
+                           maxlength="255"
+                           placeholder="https://maps.google.com/...">
+                </div>
+
+                <h2>Fechas</h2>
+
+                <p class="cliente-ayuda">
+                    Las fechas de planificación son opcionales.
+                    La fecha de registro se asigna automáticamente.
+                </p>
+
+                <div class="form-group">
+                    <label for="fechaPreparacion">Preparación</label>
+                    <input type="datetime-local"
+                           id="fechaPreparacion"
+                           th:field="*{fechaPreparacion}">
+                </div>
+
+                <div class="form-group">
+                    <label for="fechaEnvio">Envío</label>
+                    <input type="datetime-local"
+                           id="fechaEnvio"
+                           th:field="*{fechaEnvio}">
+                </div>
+
+                <div class="form-group">
+                    <label for="fechaEntrega">Entrega</label>
+                    <input type="datetime-local"
+                           id="fechaEntrega"
+                           th:field="*{fechaEntrega}">
+                </div>
+
+                <div class="form-group">
+                    <label for="observaciones">
+                        Observaciones (opcional)
+                    </label>
+
+                    <textarea id="observaciones"
+                              th:field="*{observaciones}"
+                              rows="3"></textarea>
+                </div>
+
+                <p>El pedido se registrará con estado REGISTRADO.</p>
+
+                <button type="submit"
+                        class="btn btn-primary"
+                        th:disabled="${#lists.isEmpty(clientes)
+                            or #lists.isEmpty(productos)}">
+                    Guardar pedido
+                </button>
+
+                <a class="btn btn-secondary" th:href="@{/pedidos}">
+                    Cancelar
+                </a>
+            </form>
+        </section>
+    </main>
+
+    <!-- Modelo de una fila nueva. No se envía con el formulario. -->
+    <template id="fila-producto">
+        <tr>
+            <td>
+                <div class="form-group">
+                    <select data-campo="productoId"
+                            aria-label="Producto"
+                            required>
+                        <option value="">Selecciona un producto</option>
+
+                        <option th:each="producto : ${productos}"
+                                th:value="${producto.id}"
+                                th:attr="data-precio=${producto.precio}"
+                                th:text="${producto.nombre + ' — '
+                                    + #numbers.formatDecimal(producto.precio, 1, 2)}">
+                        </option>
+                    </select>
+                </div>
+            </td>
+
+            <td>
+                <div class="form-group">
+                    <input type="number"
+                           data-campo="cantidad"
+                           aria-label="Cantidad"
+                           value="1"
+                           min="1"
+                           max="2147483647"
+                           step="1"
+                           required>
+                </div>
+            </td>
+
+            <td>
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-quitar>
+                    Quitar
+                </button>
+            </td>
+        </tr>
+    </template>
+
+    <script>
+        const detalles = document.getElementById("detalles");
+        const plantilla = document.getElementById("fila-producto");
+        const agregar = document.getElementById("agregar-producto");
+        const totalEstimado = document.getElementById("total-estimado");
+
+        function actualizarIndices() {
+            detalles.querySelectorAll("tr").forEach((fila, indice) => {
+                fila.querySelectorAll("[data-campo]").forEach(campo => {
+                    const propiedad = campo.dataset.campo;
+
+                    campo.name = `detalles[${indice}].${propiedad}`;
+                    campo.id = `detalle-${indice}-${propiedad}`;
+                });
+            });
+        }
+
+        function actualizarTotal() {
+            let total = 0;
+
+            detalles.querySelectorAll("tr").forEach(fila => {
+                const selector = fila.querySelector(
+                    '[data-campo="productoId"]'
+                );
+
+                const cantidadInput = fila.querySelector(
+                    '[data-campo="cantidad"]'
+                );
+
+                const opcion = selector.selectedOptions[0];
+                const precio = Number(opcion?.dataset.precio);
+                const cantidad = Number(cantidadInput.value);
+
+                if (Number.isFinite(precio)
+                        && Number.isInteger(cantidad)
+                        && cantidad > 0) {
+                    total += precio * cantidad;
+                }
+            });
+
+            totalEstimado.textContent = total.toLocaleString("es-GT", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        agregar.addEventListener("click", () => {
+            detalles.appendChild(plantilla.content.cloneNode(true));
+            actualizarIndices();
+            actualizarTotal();
+        });
+
+        detalles.addEventListener("click", evento => {
+            const boton = evento.target.closest("[data-quitar]");
+
+            if (boton) {
+                boton.closest("tr").remove();
+                actualizarIndices();
+                actualizarTotal();
+            }
+        });
+
+        detalles.addEventListener("input", actualizarTotal);
+        detalles.addEventListener("change", actualizarTotal);
+
+        actualizarIndices();
+        actualizarTotal();
+    </script>
+</body>
+
+</html>
