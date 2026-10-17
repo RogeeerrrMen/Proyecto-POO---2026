@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del gasto</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/productos.css}">
+    <link rel="stylesheet" th:href="@{/css/gastos.css}">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/gastos}">
+                Volver a gastos
+            </a>
+        </nav>
+    </header>
+
+    <main class="main-container">
+        <section class="card card-register"
+                 aria-labelledby="detalle-title">
+
+            <p class="eyebrow">LAS FINANZAS DE TU NEGOCIO</p>
+
+            <h1 class="card-title" id="detalle-title">
+                Detalle del gasto.
+            </h1>
+
+            <p class="card-subtitle">
+                Consulta la información registrada.
+            </p>
+
+            <dl class="gasto-detalle">
+                <dt>Identificador</dt>
+                <dd th:text="${gasto.id}"></dd>
+
+                <dt>Descripción</dt>
+                <dd class="gasto-descripcion"
+                    th:text="${gasto.descripcion}"></dd>
+
+                <dt>Monto</dt>
+                <dd th:text="${'Q ' + #numbers.formatDecimal(
+                        gasto.monto, 1, 'COMMA', 2, 'POINT')}"></dd>
+
+                <dt>Fecha</dt>
+                <dd th:text="${#temporals.format(
+                        gasto.fecha, 'dd/MM/yyyy')}"></dd>
+            </dl>
+
+            <div class="gastos-acciones">
+                <a class="btn btn-primary"
+                   th:href="@{/gastos/{id}/editar(id=${gasto.id})}">
+                    Editar gasto
+                </a>
+
+                <a class="btn btn-secondary" th:href="@{/gastos}">
+                    Volver al listado
+                </a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

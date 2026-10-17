@@ -1,0 +1,90 @@
+.gastos-filtros {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.gastos-filtros .form-group {
+    flex: 1 1 200px;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.gastos-acciones {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.gastos-resumen {
+    margin-bottom: 28px;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+}
+
+.gastos-resumen p {
+    margin: 0 0 8px;
+    color: var(--text-muted);
+}
+
+.gastos-resumen strong {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+.gasto-fecha {
+    white-space: nowrap;
+}
+
+.gasto-descripcion {
+    min-width: 0;
+    max-width: 420px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.gasto-detalle {
+    margin: 0 0 30px;
+}
+
+.gasto-detalle dt {
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.gasto-detalle dd {
+    margin: 0 0 22px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.gasto-ayuda {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.form-group .campo-invalido {
+    border-color: #8a3a2c;
+}
+
+@media (max-width: 600px) {
+    .gastos-filtros {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .gastos-filtros .form-group {
+        flex: auto;
+    }
+
+    .gastos-acciones .btn {
+        flex: 1 1 auto;
+    }
+}
