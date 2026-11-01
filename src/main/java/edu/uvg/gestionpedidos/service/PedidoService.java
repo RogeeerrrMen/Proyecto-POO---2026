@@ -16,6 +16,7 @@ import edu.uvg.gestionpedidos.entity.Producto;
 import edu.uvg.gestionpedidos.repository.ClienteRepository;
 import edu.uvg.gestionpedidos.repository.PedidoRepository;
 import edu.uvg.gestionpedidos.repository.ProductoRepository;
+import edu.uvg.gestionpedidos.entity.EstadoPedido;
 
 @Service
 public class PedidoService {
@@ -77,6 +78,28 @@ public class PedidoService {
         }
 
         return pedidoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("El pedido no existe."));
+    }
+
+    @Transactional
+    public Pedido actualizarEstado(Long id, EstadoPedido nuevoEstado) {
+        if (nuevoEstado == null) {
+            throw new IllegalArgumentException("Debes seleccionar un estado.");
+        }
+
+        Pedido pedido = obtenerPorId(id);
+
+        switch (nuevoEstado) {
+            case CONFIRMADO -> pedido.confirmar();
+            case EN_PREPARACION -> pedido.iniciarPreparacion();
+            case LISTO -> pedido.marcarListo();
+            case ENVIADO -> pedido.marcarEnviado();
+            case ENTREGADO -> pedido.marcarEntregado();
+            case FALLIDO -> pedido.marcarFallido();
+            case CANCELADO -> pedido.cancelar();
+            case REGISTRADO -> throw new IllegalArgumentException("No se puede volver al estado REGISTRADO.");
+        }
+
+        return pedidoRepository.save(pedido);
     }
 
     private BigDecimal obtenerPrecioParaPedido(Producto producto) {

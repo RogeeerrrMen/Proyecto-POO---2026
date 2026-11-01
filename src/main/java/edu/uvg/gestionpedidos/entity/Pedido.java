@@ -112,6 +112,46 @@ public class Pedido {
         }
     }
 
+    private void cambiarEstado(EstadoPedido nuevoEstado) {
+        if (nuevoEstado == null) {
+            throw new IllegalArgumentException("Debes seleccionar un estado.");
+        }
+
+        if (!estado.puedeCambiarA(nuevoEstado)) {
+            throw new IllegalArgumentException("No se puede cambiar el pedido de " + estado + " a " + nuevoEstado + ".");
+        }
+
+        this.estado = nuevoEstado;
+    }
+
+    public void confirmar() {
+        cambiarEstado(EstadoPedido.CONFIRMADO);
+    }
+
+    public void iniciarPreparacion() {
+        cambiarEstado(EstadoPedido.EN_PREPARACION);
+    }
+
+    public void marcarListo() {
+        cambiarEstado(EstadoPedido.LISTO);
+    }
+
+    public void marcarEnviado() {
+        cambiarEstado(EstadoPedido.ENVIADO);
+    }
+
+    public void marcarEntregado() {
+        cambiarEstado(EstadoPedido.ENTREGADO);
+    }
+
+    public void marcarFallido() {
+        cambiarEstado(EstadoPedido.FALLIDO);
+    }
+
+    public void cancelar() {
+        cambiarEstado(EstadoPedido.CANCELADO);
+    }
+
     public Long getId() {
         return id;
     }
