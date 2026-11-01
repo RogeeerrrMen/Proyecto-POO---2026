@@ -1,5 +1,9 @@
 package edu.uvg.gestionpedidos.service;
 
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
+import edu.uvg.gestionpedidos.repository.EmprendimientoRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 import edu.uvg.gestionpedidos.dto.RegistroUsuarioDTO;
 import edu.uvg.gestionpedidos.entity.Usuario;
 import edu.uvg.gestionpedidos.repository.UsuarioRepository;
@@ -14,30 +18,47 @@ public class UsuarioService {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     private final UsuarioRepository usuarioRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final EmprendimientoRepository emprendimientoRepository;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    private final BCryptPasswordEncoder passwordEncoder =
+        new BCryptPasswordEncoder();
 
-        this.usuarioRepository = usuarioRepository;
-
+    public UsuarioService(
+        UsuarioRepository usuarioRepository,
+        EmprendimientoRepository emprendimientoRepository
+    ) {
+    this.usuarioRepository = usuarioRepository;
+    this.emprendimientoRepository = emprendimientoRepository;
     }
 
 
+    @Transactional
     public void registrarUsuario(RegistroUsuarioDTO datos) {
-
         validarDatos(datos);
 
         Usuario usuario = new Usuario();
 
         usuario.setNombre(datos.getNombre().trim());
         usuario.setApellido(datos.getApellido().trim());
-        usuario.setCorreo(datos.getCorreo().trim().toLowerCase(java.util.Locale.ROOT));
+        usuario.setCorreo(
+            datos.getCorreo().trim()
+                    .toLowerCase(java.util.Locale.ROOT)
+    );
 
-        usuario.setPasswordHash(passwordEncoder.encode(datos.getPassword()));
+    //Valida el nombre del emprendimiento antes de guardar la cuenta
+    Emprendimiento emprendimiento = new Emprendimiento(
+            datos.getEmprendimiento(),
+            usuario
+    );
 
-        usuarioRepository.save(usuario);
+    usuario.setPasswordHash(
+            passwordEncoder.encode(datos.getPassword())
+    );
 
-    }
+    //Primero se guarda el usuario y después su emprendimiento
+    usuarioRepository.save(usuario);
+    emprendimientoRepository.save(emprendimiento);
+}
 
     private void validarDatos(RegistroUsuarioDTO datos) {
 

@@ -5,6 +5,9 @@ import edu.uvg.gestionpedidos.dto.RegistroUsuarioDTO;
 import edu.uvg.gestionpedidos.entity.Usuario;
 import edu.uvg.gestionpedidos.repository.UsuarioRepository;
 
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
+import edu.uvg.gestionpedidos.repository.EmprendimientoRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,12 +21,17 @@ public class UsuarioServiceTest {
 
     private UsuarioRepository usuarioRepository;
     private UsuarioService usuarioService;
+    private EmprendimientoRepository emprendimientoRepository;
 
     @BeforeEach
     void preparar() {
         usuarioRepository = mock(UsuarioRepository.class);
-        usuarioService = new UsuarioService(usuarioRepository);
-    }
+
+        emprendimientoRepository =
+            mock(EmprendimientoRepository.class);
+
+        usuarioService = new UsuarioService(usuarioRepository, emprendimientoRepository);
+}
 
     private RegistroUsuarioDTO datosValidos() {
 
