@@ -1,0 +1,38 @@
+.emprendimiento-detalle {
+    margin: 28px 0;
+}
+
+.emprendimiento-detalle dt {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.emprendimiento-detalle dd {
+    margin: 0 0 22px;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.emprendimiento-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.empty-state .emprendimiento-acciones {
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.emprendimiento-ayuda {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+@media (max-width: 600px) {
+    .emprendimiento-acciones .btn {
+        width: 100%;
+    }
+}

@@ -75,13 +75,13 @@
                     <label for="emprendimiento">
                         Nombre del emprendimiento
                     </label>
-                    <input
-                        type="text"
+                    <input type="text"
                         id="emprendimiento"
                         th:field="*{emprendimiento}"
+                        maxlength="120"
                         placeholder="¿Cómo se llama tu negocio?"
                         autocomplete="organization"
-                        required>
+                    required>
                 </div>
 
                 <div class="form-row">
