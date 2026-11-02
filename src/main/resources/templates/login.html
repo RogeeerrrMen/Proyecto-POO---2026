@@ -37,6 +37,11 @@
                 <p>Sesión cerrada correctamente.</p>
             </div>
 
+            <p role="status" th:if="${param.registroExitoso != null}">
+                Tu cuenta y tu emprendimiento se registraron correctamente.
+                Ya puedes iniciar sesión.
+            </p>
+
             <form th:action="@{/login}" method="post">
                 
                 <div class="form-group">

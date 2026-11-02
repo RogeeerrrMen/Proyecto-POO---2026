@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi emprendimiento</title>
+
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/productos.css}">
+    <link rel="stylesheet" th:href="@{/css/emprendimientos.css}">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/dashboard}">
+                Volver al inicio
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        <header class="dashboard-heading">
+            <p class="eyebrow">TU NEGOCIO</p>
+
+            <h1 class="card-title">Mi emprendimiento.</h1>
+
+            <p class="card-subtitle">
+                Consulta y actualiza la información de tu negocio.
+            </p>
+        </header>
+
+        <p class="alert alert-success"
+           role="status"
+           th:if="${mensaje}"
+           th:text="${mensaje}"></p>
+
+        <p class="alert alert-error"
+           role="alert"
+           th:if="${error}"
+           th:text="${error}"></p>
+
+        <!--Información del emprendimiento propio-->
+        <section class="card card-register"
+                 th:if="${emprendimiento != null}"
+                 aria-labelledby="datos-title">
+
+            <h2 class="section-title" id="datos-title">
+                Datos del emprendimiento
+            </h2>
+
+            <dl class="emprendimiento-detalle">
+                <dt>Identificador</dt>
+                <dd th:text="${emprendimiento.id}"></dd>
+
+                <dt>Nombre</dt>
+                <dd th:text="${emprendimiento.nombre}"></dd>
+            </dl>
+
+            <div class="emprendimiento-acciones">
+                <a class="btn btn-primary"
+                   th:href="@{/emprendimientos/{id}/editar(
+                           id=${emprendimiento.id})}">
+                    Modificar nombre
+                </a>
+            </div>
+        </section>
+
+        <!--Permite completar la información de cuentas anteriores-->
+        <section class="empty-state"
+                 th:if="${emprendimiento == null}"
+                 aria-labelledby="sin-emprendimiento-title">
+
+            <h2 id="sin-emprendimiento-title">
+                Registra tu emprendimiento.
+            </h2>
+
+            <p>
+                Tu cuenta todavía no tiene un emprendimiento asociado.
+                Agrega el nombre de tu negocio para completar la información.
+            </p>
+
+            <div class="emprendimiento-acciones">
+                <a class="btn btn-primary"
+                   th:href="@{/emprendimientos/nuevo}">
+                    Registrar emprendimiento
+                </a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
