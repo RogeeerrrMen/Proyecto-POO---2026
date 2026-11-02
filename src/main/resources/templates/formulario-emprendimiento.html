@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${emprendimientoId == null}
+            ? 'Registrar emprendimiento'
+            : 'Editar emprendimiento'">
+        Emprendimiento
+    </title>
+
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/productos.css}">
+    <link rel="stylesheet" th:href="@{/css/emprendimientos.css}">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/emprendimientos}">
+                Volver a mi emprendimiento
+            </a>
+        </nav>
+    </header>
+
+    <main class="main-container">
+        <section class="card card-register"
+                 aria-labelledby="emprendimiento-title">
+
+            <p class="eyebrow">TU NEGOCIO</p>
+
+            <h1 class="card-title"
+                id="emprendimiento-title"
+                th:text="${emprendimientoId == null}
+                        ? 'Registra tu emprendimiento.'
+                        : 'Actualiza su nombre.'">
+            </h1>
+
+            <p class="card-subtitle">
+                Ingresa el nombre con el que identificas tu negocio.
+            </p>
+
+            <p class="alert alert-error"
+               role="alert"
+               th:if="${error}"
+               th:text="${error}"></p>
+
+            <form th:action="${emprendimientoId == null}
+                          ? @{/emprendimientos}
+                          : @{/emprendimientos/{id}(
+                                  id=${emprendimientoId})}"
+                  th:object="${emprendimiento}"
+                  method="post">
+
+                <div class="form-group">
+                    <label for="nombre">
+                        Nombre del emprendimiento
+                    </label>
+
+                    <input type="text"
+                           id="nombre"
+                           th:field="*{nombre}"
+                           maxlength="120"
+                           autocomplete="organization"
+                           placeholder="Ejemplo: Dulces Santi"
+                           aria-describedby="nombre-ayuda"
+                           required>
+
+                    <small class="emprendimiento-ayuda"
+                           id="nombre-ayuda">
+                        Puedes ingresar hasta 120 caracteres.
+                    </small>
+                </div>
+
+                <button class="btn btn-primary"
+                        type="submit"
+                        th:text="${emprendimientoId == null}
+                                ? 'Registrar emprendimiento'
+                                : 'Guardar cambios'">
+                    Guardar
+                </button>
+            </form>
+
+            <p class="form-footer">
+                <a th:href="@{/emprendimientos}">
+                    Cancelar y volver
+                </a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

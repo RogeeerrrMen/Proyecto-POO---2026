@@ -41,7 +41,7 @@ public class AuthController {
         try {
 
             usuarioService.registrarUsuario(datos);
-            return "redirect:/dashboard";
+            return "redirect:/login?registroExitoso";
 
         } catch (IllegalArgumentException e) {
 

@@ -1,32 +1,40 @@
-
 package edu.uvg.gestionpedidos.service;
 
 import edu.uvg.gestionpedidos.dto.RegistroUsuarioDTO;
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
 import edu.uvg.gestionpedidos.entity.Usuario;
+import edu.uvg.gestionpedidos.repository.EmprendimientoRepository;
 import edu.uvg.gestionpedidos.repository.UsuarioRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-public class UsuarioServiceTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class UsuarioServiceTest {
 
     private UsuarioRepository usuarioRepository;
+    private EmprendimientoRepository emprendimientoRepository;
     private UsuarioService usuarioService;
 
     @BeforeEach
     void preparar() {
         usuarioRepository = mock(UsuarioRepository.class);
-        usuarioService = new UsuarioService(usuarioRepository);
+
+        emprendimientoRepository =
+                mock(EmprendimientoRepository.class);
+
+        usuarioService = new UsuarioService(
+                usuarioRepository,
+                emprendimientoRepository
+        );
     }
 
     private RegistroUsuarioDTO datosValidos() {
-
         RegistroUsuarioDTO datos = new RegistroUsuarioDTO();
 
         datos.setNombre("Roger");
@@ -34,106 +42,126 @@ public class UsuarioServiceTest {
         datos.setCorreo("prueba@example.com");
         datos.setPassword("PruebaSegura2026!");
         datos.setConfirmarPassword("PruebaSegura2026!");
+        datos.setEmprendimiento("  Dulces Roger  ");
 
         return datos;
     }
 
+    //Comprueba que un registro inválido no intente guardar ningún objeto
+    private void assertRegistroRechazado(RegistroUsuarioDTO datos) {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> usuarioService.registrarUsuario(datos)
+        );
+
+        verify(usuarioRepository, never())
+                .save(any(Usuario.class));
+
+        verify(emprendimientoRepository, never())
+                .save(any(Emprendimiento.class));
+    }
+
     @Test
     void registrarUsuarioValido() {
-
         RegistroUsuarioDTO datos = datosValidos();
 
         usuarioService.registrarUsuario(datos);
 
-        ArgumentCaptor<Usuario> captor =
+        ArgumentCaptor<Usuario> usuarioCaptor =
                 ArgumentCaptor.forClass(Usuario.class);
 
-        verify(usuarioRepository).save(captor.capture());
+        ArgumentCaptor<Emprendimiento> emprendimientoCaptor =
+                ArgumentCaptor.forClass(Emprendimiento.class);
 
-        Usuario guardado = captor.getValue();
+        verify(usuarioRepository).save(usuarioCaptor.capture());
+
+        verify(emprendimientoRepository)
+                .save(emprendimientoCaptor.capture());
+
+        Usuario guardado = usuarioCaptor.getValue();
+        Emprendimiento negocio = emprendimientoCaptor.getValue();
 
         assertEquals("Roger", guardado.getNombre());
+        assertEquals("Mendez", guardado.getApellido());
         assertEquals("prueba@example.com", guardado.getCorreo());
 
-        assertNotEquals(datos.getPassword(),guardado.getPasswordHash());
+        assertNotEquals(
+                datos.getPassword(),
+                guardado.getPasswordHash()
+        );
 
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        BCryptPasswordEncoder encoder =
+                new BCryptPasswordEncoder();
 
-        assertTrue(encoder.matches(datos.getPassword(),guardado.getPasswordHash()));
+        assertTrue(
+                encoder.matches(
+                        datos.getPassword(),
+                        guardado.getPasswordHash()
+                )
+        );
+
+        assertEquals("Dulces Roger", negocio.getNombre());
+
+        //El negocio debe pertenecer al usuario que se acaba de registrar
+        assertSame(guardado, negocio.getPropietario());
     }
 
     @Test
     void rechazarNombreVacio() {
-
         RegistroUsuarioDTO datos = datosValidos();
         datos.setNombre("   ");
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> usuarioService.registrarUsuario(datos)
-        );
-
-        verify(usuarioRepository, never()).save(any(Usuario.class));
+        assertRegistroRechazado(datos);
     }
 
     @Test
     void rechazarCorreoInvalido() {
-
         RegistroUsuarioDTO datos = datosValidos();
         datos.setCorreo("correo-invalido");
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> usuarioService.registrarUsuario(datos)
-        );
-
-        verify(usuarioRepository, never()).save(any(Usuario.class));
+        assertRegistroRechazado(datos);
     }
 
     @Test
     void rechazarContrasenasDiferentes() {
-
         RegistroUsuarioDTO datos = datosValidos();
         datos.setConfirmarPassword("OtraContrasena2026!");
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> usuarioService.registrarUsuario(datos)
-        );
-
-        verify(usuarioRepository, never()).save(any(Usuario.class));
+        assertRegistroRechazado(datos);
     }
 
     @Test
     void rechazarCorreoDuplicado() {
-
         RegistroUsuarioDTO datos = datosValidos();
 
         when(usuarioRepository.existsByCorreoIgnoreCase(
                 "prueba@example.com"
         )).thenReturn(true);
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> usuarioService.registrarUsuario(datos)
-        );
-
-        verify(usuarioRepository, never()).save(any(Usuario.class));
+        assertRegistroRechazado(datos);
     }
 
     @Test
     void rechazarContrasenaCorta() {
-
         RegistroUsuarioDTO datos = datosValidos();
 
         datos.setPassword("123");
         datos.setConfirmarPassword("123");
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> usuarioService.registrarUsuario(datos)
-        );
+        assertRegistroRechazado(datos);
+    }
 
-        verify(usuarioRepository, never()).save(any(Usuario.class));
+    @Test
+    void rechazarEmprendimientoInvalidoSinGuardarLaCuenta() {
+        String[] nombresInvalidos = {
+                null, "", "   ", "a".repeat(121)
+        };
+
+        for (String nombre : nombresInvalidos) {
+            RegistroUsuarioDTO datos = datosValidos();
+            datos.setEmprendimiento(nombre);
+
+            assertRegistroRechazado(datos);
+        }
     }
 }
