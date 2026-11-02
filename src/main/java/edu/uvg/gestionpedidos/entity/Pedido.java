@@ -2,6 +2,8 @@ package edu.uvg.gestionpedidos.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -45,9 +47,14 @@ public class Pedido {
     @Column(nullable = false)
     private LocalDateTime fechaPedido;
 
-    private LocalDateTime fechaPreparacion;
-    private LocalDateTime fechaEnvio;
-    private LocalDateTime fechaEntrega;
+    private LocalDate fechaPreparacion;
+    private LocalTime horaPreparacion;
+
+    private LocalDate fechaEnvio;
+    private LocalTime horaEnvio;
+
+    private LocalDate fechaEntrega;
+    private LocalTime horaEntrega;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -172,32 +179,56 @@ public class Pedido {
         return direccionEntrega;
     }
 
-    public LocalDateTime getFechaPedido() {
-        return fechaPedido;
-    }
-
-    public LocalDateTime getFechaPreparacion() {
+    public LocalDate getFechaPreparacion() {
         return fechaPreparacion;
     }
 
-    public void setFechaPreparacion(LocalDateTime fechaPreparacion) {
+    public void setFechaPreparacion(LocalDate fechaPreparacion) {
         this.fechaPreparacion = fechaPreparacion;
     }
 
-    public LocalDateTime getFechaEnvio() {
+    public LocalTime getHoraPreparacion() {
+        return horaPreparacion;
+    }
+
+    public void setHoraPreparacion(LocalTime horaPreparacion) {
+        this.horaPreparacion = horaPreparacion;
+    }
+
+    public LocalDate getFechaEnvio() {
         return fechaEnvio;
     }
 
-    public void setFechaEnvio(LocalDateTime fechaEnvio) {
+    public void setFechaEnvio(LocalDate fechaEnvio) {
         this.fechaEnvio = fechaEnvio;
     }
 
-    public LocalDateTime getFechaEntrega() {
+    public LocalTime getHoraEnvio() {
+        return horaEnvio;
+    }
+
+    public void setHoraEnvio(LocalTime horaEnvio) {
+        this.horaEnvio = horaEnvio;
+    }
+
+    public LocalDate getFechaEntrega() {
         return fechaEntrega;
     }
 
-    public void setFechaEntrega(LocalDateTime fechaEntrega) {
+    public void setFechaEntrega(LocalDate fechaEntrega) {
         this.fechaEntrega = fechaEntrega;
+    }
+
+    public LocalTime getHoraEntrega() {
+        return horaEntrega;
+    }
+
+    public void setHoraEntrega(LocalTime horaEntrega) {
+        this.horaEntrega = horaEntrega;
+    }
+
+    public LocalDateTime getFechaPedido() {
+        return fechaPedido;
     }
 
     public EstadoPedido getEstado() {

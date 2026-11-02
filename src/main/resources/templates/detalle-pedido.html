@@ -181,22 +181,40 @@
 
             <dl>
                 <dt>Preparación</dt>
-                <dd th:text="${pedido.fechaPreparacion != null
-                    ? #temporals.format(
-                        pedido.fechaPreparacion, 'dd/MM/yyyy HH:mm')
-                    : 'Sin programar'}"></dd>
+                <dd>
+                    <span th:text="${pedido.fechaPreparacion != null
+                        ? #temporals.format(pedido.fechaPreparacion, 'dd/MM/yyyy')
+                        : 'Sin programar'}"></span>
+
+                    <span th:if="${pedido.fechaPreparacion != null}"
+                        th:text="${pedido.horaPreparacion != null
+                            ? ' — ' + #temporals.format(pedido.horaPreparacion, 'HH:mm')
+                            : ' — Sin hora especificada'}"></span>
+                </dd>
 
                 <dt>Envío</dt>
-                <dd th:text="${pedido.fechaEnvio != null
-                    ? #temporals.format(
-                        pedido.fechaEnvio, 'dd/MM/yyyy HH:mm')
-                    : 'Sin programar'}"></dd>
+                <dd>
+                    <span th:text="${pedido.fechaEnvio != null
+                        ? #temporals.format(pedido.fechaEnvio, 'dd/MM/yyyy')
+                        : 'Sin programar'}"></span>
+
+                    <span th:if="${pedido.fechaEnvio != null}"
+                        th:text="${pedido.horaEnvio != null
+                            ? ' — ' + #temporals.format(pedido.horaEnvio, 'HH:mm')
+                            : ' — Sin hora especificada'}"></span>
+                </dd>
 
                 <dt>Entrega</dt>
-                <dd th:text="${pedido.fechaEntrega != null
-                    ? #temporals.format(
-                        pedido.fechaEntrega, 'dd/MM/yyyy HH:mm')
-                    : 'Sin programar'}"></dd>
+                <dd>
+                    <span th:text="${pedido.fechaEntrega != null
+                        ? #temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')
+                        : 'Sin programar'}"></span>
+
+                    <span th:if="${pedido.fechaEntrega != null}"
+                        th:text="${pedido.horaEntrega != null
+                            ? ' — ' + #temporals.format(pedido.horaEntrega, 'HH:mm')
+                            : ' — Sin hora especificada'}"></span>
+                </dd>
             </dl>
         </section>
 

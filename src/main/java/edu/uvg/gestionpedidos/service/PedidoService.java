@@ -3,6 +3,8 @@ package edu.uvg.gestionpedidos.service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,8 +47,13 @@ public class PedidoService {
         Pedido pedido = new Pedido(codigo, cliente, direccion);
 
         pedido.setFechaPreparacion(datos.getFechaPreparacion());
+        pedido.setHoraPreparacion(datos.getHoraPreparacion());
+
         pedido.setFechaEnvio(datos.getFechaEnvio());
+        pedido.setHoraEnvio(datos.getHoraEnvio());
+
         pedido.setFechaEntrega(datos.getFechaEntrega());
+        pedido.setHoraEntrega(datos.getHoraEntrega());
         pedido.setObservaciones(limpiarTexto(datos.getObservaciones()));
 
         for (DetallePedidoDTO detalle : datos.getDetalles()) {
@@ -113,11 +120,23 @@ public class PedidoService {
         // Pendiente: coordinar con Roger Producto.precio como BigDecimal.
         return BigDecimal.valueOf(precio);
     }
+    private void validarFechaYHora(LocalDate fecha, LocalTime hora, String etapa) {
+
+        if (hora != null && fecha == null) {
+            throw new IllegalArgumentException("Selecciona la fecha de " + etapa + " antes de indicar una hora.");
+        }
+    }
 
     private void validarFormulario(PedidoDTO datos) {
         if (datos == null) {
             throw new IllegalArgumentException("Los datos del pedido son obligatorios.");
         }
+
+        validarFechaYHora(datos.getFechaPreparacion(), datos.getHoraPreparacion(),"preparación");
+
+        validarFechaYHora(datos.getFechaEnvio(), datos.getHoraEnvio(), "envío");
+
+        validarFechaYHora(datos.getFechaEntrega(), datos.getHoraEntrega(),"entrega");
 
         if (datos.getClienteId() == null || datos.getClienteId() <= 0) {
             throw new IllegalArgumentException("Debes seleccionar un cliente.");
