@@ -43,6 +43,46 @@
    th:text="${exito}"
    role="status"></p>
 
+<p class="pedido-error"
+   th:if="${error}"
+   th:text="${error}"
+   role="alert"></p>
+
+<section aria-labelledby="estado-title">
+    <h2 id="estado-title">Actualizar estado</h2>
+
+    <form th:if="${!#lists.isEmpty(pedido.estado.estadosPermitidos)}"
+          th:action="@{/pedidos/{id}/estado(id=${pedido.id})}"
+          method="post"
+          onsubmit="if (this.elements['nuevoEstado'].value === 'CANCELADO') {
+              return confirm('¿Deseas cancelar este pedido? Esta acción no se puede deshacer.');
+          }">
+
+        <label for="nuevoEstado">Nuevo estado</label>
+
+        <select id="nuevoEstado"
+                name="nuevoEstado"
+                required>
+            <option value="" disabled selected>
+                Selecciona un estado
+            </option>
+
+            <option th:each="estado : ${pedido.estado.estadosPermitidos}"
+                    th:value="${estado.name()}"
+                    th:text="${#strings.replace(estado.name(), '_', ' ')}">
+            </option>
+        </select>
+
+        <button type="submit" class="btn btn-primary">
+            Actualizar estado
+        </button>
+    </form>
+
+    <p th:if="${#lists.isEmpty(pedido.estado.estadosPermitidos)}">
+        Este pedido está en un estado final y no permite más cambios.
+    </p>
+</section>
+
         <section aria-labelledby="informacion-title">
             <h2 id="informacion-title">Información general</h2>
 
@@ -141,22 +181,40 @@
 
             <dl>
                 <dt>Preparación</dt>
-                <dd th:text="${pedido.fechaPreparacion != null
-                    ? #temporals.format(
-                        pedido.fechaPreparacion, 'dd/MM/yyyy HH:mm')
-                    : 'Sin programar'}"></dd>
+                <dd>
+                    <span th:text="${pedido.fechaPreparacion != null
+                        ? #temporals.format(pedido.fechaPreparacion, 'dd/MM/yyyy')
+                        : 'Sin programar'}"></span>
+
+                    <span th:if="${pedido.fechaPreparacion != null}"
+                        th:text="${pedido.horaPreparacion != null
+                            ? ' — ' + #temporals.format(pedido.horaPreparacion, 'HH:mm')
+                            : ' — Sin hora especificada'}"></span>
+                </dd>
 
                 <dt>Envío</dt>
-                <dd th:text="${pedido.fechaEnvio != null
-                    ? #temporals.format(
-                        pedido.fechaEnvio, 'dd/MM/yyyy HH:mm')
-                    : 'Sin programar'}"></dd>
+                <dd>
+                    <span th:text="${pedido.fechaEnvio != null
+                        ? #temporals.format(pedido.fechaEnvio, 'dd/MM/yyyy')
+                        : 'Sin programar'}"></span>
+
+                    <span th:if="${pedido.fechaEnvio != null}"
+                        th:text="${pedido.horaEnvio != null
+                            ? ' — ' + #temporals.format(pedido.horaEnvio, 'HH:mm')
+                            : ' — Sin hora especificada'}"></span>
+                </dd>
 
                 <dt>Entrega</dt>
-                <dd th:text="${pedido.fechaEntrega != null
-                    ? #temporals.format(
-                        pedido.fechaEntrega, 'dd/MM/yyyy HH:mm')
-                    : 'Sin programar'}"></dd>
+                <dd>
+                    <span th:text="${pedido.fechaEntrega != null
+                        ? #temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')
+                        : 'Sin programar'}"></span>
+
+                    <span th:if="${pedido.fechaEntrega != null}"
+                        th:text="${pedido.horaEntrega != null
+                            ? ' — ' + #temporals.format(pedido.horaEntrega, 'HH:mm')
+                            : ' — Sin hora especificada'}"></span>
+                </dd>
             </dl>
         </section>
 

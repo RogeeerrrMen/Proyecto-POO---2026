@@ -3,6 +3,8 @@ package edu.uvg.gestionpedidos.service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -215,5 +217,82 @@ class PedidoServiceTest {
         assertTrue(pedidoService.listar().isEmpty());
 
         verify(pedidoRepository).findAllByOrderByFechaPedidoDescIdDesc();
+    }
+
+    @Test
+    void registrarFechasSinHoras() {
+        prepararClienteExistente();
+        prepararGuardado();
+
+        when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+
+        PedidoDTO datos = crearFormulario();
+        LocalDate fecha = LocalDate.of(2026, 11, 5);
+
+        datos.setFechaPreparacion(fecha);
+        datos.setFechaEnvio(fecha.plusDays(1));
+        datos.setFechaEntrega(fecha.plusDays(2));
+
+        Pedido pedido = pedidoService.registrar(datos);
+
+        assertEquals(fecha, pedido.getFechaPreparacion());
+        assertEquals(fecha.plusDays(1), pedido.getFechaEnvio());
+        assertEquals(fecha.plusDays(2), pedido.getFechaEntrega());
+
+        assertNull(pedido.getHoraPreparacion());
+        assertNull(pedido.getHoraEnvio());
+        assertNull(pedido.getHoraEntrega());
+
+        verify(pedidoRepository).save(pedido);
+    }
+
+    @Test
+    void registrarFechasConHoras() {
+        prepararClienteExistente();
+        prepararGuardado();
+
+        when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+
+        PedidoDTO datos = crearFormulario();
+        LocalDate fecha = LocalDate.of(2026, 11, 5);
+
+        datos.setFechaPreparacion(fecha);
+        datos.setHoraPreparacion(LocalTime.of(8, 30));
+
+        datos.setFechaEnvio(fecha.plusDays(1));
+        datos.setHoraEnvio(LocalTime.of(10, 0));
+
+        datos.setFechaEntrega(fecha.plusDays(2));
+        datos.setHoraEntrega(LocalTime.MIDNIGHT);
+
+        Pedido pedido = pedidoService.registrar(datos);
+
+        assertEquals(fecha, pedido.getFechaPreparacion());
+        assertEquals(fecha.plusDays(1), pedido.getFechaEnvio());
+        assertEquals(fecha.plusDays(2), pedido.getFechaEntrega());
+
+        assertEquals(LocalTime.of(8, 30), pedido.getHoraPreparacion());
+        assertEquals(LocalTime.of(10, 0), pedido.getHoraEnvio());
+        assertEquals(LocalTime.MIDNIGHT, pedido.getHoraEntrega());
+
+        verify(pedidoRepository).save(pedido);
+    }
+
+    @Test
+    void rechazarHorasSinFechas() {
+        PedidoDTO preparacion = crearFormulario();
+        preparacion.setHoraPreparacion(LocalTime.of(8, 30));
+
+        PedidoDTO envio = crearFormulario();
+        envio.setHoraEnvio(LocalTime.of(10, 0));
+
+        PedidoDTO entrega = crearFormulario();
+        entrega.setHoraEntrega(LocalTime.of(14, 0));
+
+        for (PedidoDTO datos : List.of(preparacion, envio, entrega)) {
+            assertThrows(IllegalArgumentException.class,() -> pedidoService.registrar(datos));
+        }
+
+        verifyNoInteractions(pedidoRepository, clienteRepository, productoRepository);
     }
 }

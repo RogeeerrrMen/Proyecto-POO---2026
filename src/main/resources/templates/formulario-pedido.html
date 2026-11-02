@@ -208,28 +208,52 @@
 
                 <p class="cliente-ayuda">
                     Las fechas de planificación son opcionales.
+                    Puedes seleccionar una fecha sin indicar una hora.
                     La fecha de registro se asigna automáticamente.
                 </p>
 
                 <div class="form-group">
-                    <label for="fechaPreparacion">Preparación</label>
-                    <input type="datetime-local"
-                           id="fechaPreparacion"
-                           th:field="*{fechaPreparacion}">
+                    <label for="fechaPreparacion">Fecha de preparación</label>
+                    <input type="date"
+                        id="fechaPreparacion"
+                        th:field="*{fechaPreparacion}">
                 </div>
 
                 <div class="form-group">
-                    <label for="fechaEnvio">Envío</label>
-                    <input type="datetime-local"
-                           id="fechaEnvio"
-                           th:field="*{fechaEnvio}">
+                    <label for="horaPreparacion">
+                        Hora de preparación (opcional)
+                    </label>
+                    <input type="time"
+                        id="horaPreparacion"
+                        th:field="*{horaPreparacion}">
                 </div>
 
                 <div class="form-group">
-                    <label for="fechaEntrega">Entrega</label>
-                    <input type="datetime-local"
-                           id="fechaEntrega"
-                           th:field="*{fechaEntrega}">
+                    <label for="fechaEnvio">Fecha de envío</label>
+                    <input type="date"
+                        id="fechaEnvio"
+                        th:field="*{fechaEnvio}">
+                </div>
+
+                <div class="form-group">
+                    <label for="horaEnvio">Hora de envío (opcional)</label>
+                    <input type="time"
+                        id="horaEnvio"
+                        th:field="*{horaEnvio}">
+                </div>
+
+                <div class="form-group">
+                    <label for="fechaEntrega">Fecha de entrega</label>
+                    <input type="date"
+                        id="fechaEntrega"
+                        th:field="*{fechaEntrega}">
+                </div>
+
+                <div class="form-group">
+                    <label for="horaEntrega">Hora de entrega (opcional)</label>
+                    <input type="time"
+                        id="horaEntrega"
+                        th:field="*{horaEntrega}">
                 </div>
 
                 <div class="form-group">

@@ -2,6 +2,8 @@ package edu.uvg.gestionpedidos.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -45,9 +47,14 @@ public class Pedido {
     @Column(nullable = false)
     private LocalDateTime fechaPedido;
 
-    private LocalDateTime fechaPreparacion;
-    private LocalDateTime fechaEnvio;
-    private LocalDateTime fechaEntrega;
+    private LocalDate fechaPreparacion;
+    private LocalTime horaPreparacion;
+
+    private LocalDate fechaEnvio;
+    private LocalTime horaEnvio;
+
+    private LocalDate fechaEntrega;
+    private LocalTime horaEntrega;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -112,6 +119,46 @@ public class Pedido {
         }
     }
 
+    private void cambiarEstado(EstadoPedido nuevoEstado) {
+        if (nuevoEstado == null) {
+            throw new IllegalArgumentException("Debes seleccionar un estado.");
+        }
+
+        if (!estado.puedeCambiarA(nuevoEstado)) {
+            throw new IllegalArgumentException("No se puede cambiar el pedido de " + estado + " a " + nuevoEstado + ".");
+        }
+
+        this.estado = nuevoEstado;
+    }
+
+    public void confirmar() {
+        cambiarEstado(EstadoPedido.CONFIRMADO);
+    }
+
+    public void iniciarPreparacion() {
+        cambiarEstado(EstadoPedido.EN_PREPARACION);
+    }
+
+    public void marcarListo() {
+        cambiarEstado(EstadoPedido.LISTO);
+    }
+
+    public void marcarEnviado() {
+        cambiarEstado(EstadoPedido.ENVIADO);
+    }
+
+    public void marcarEntregado() {
+        cambiarEstado(EstadoPedido.ENTREGADO);
+    }
+
+    public void marcarFallido() {
+        cambiarEstado(EstadoPedido.FALLIDO);
+    }
+
+    public void cancelar() {
+        cambiarEstado(EstadoPedido.CANCELADO);
+    }
+
     public Long getId() {
         return id;
     }
@@ -132,32 +179,56 @@ public class Pedido {
         return direccionEntrega;
     }
 
-    public LocalDateTime getFechaPedido() {
-        return fechaPedido;
-    }
-
-    public LocalDateTime getFechaPreparacion() {
+    public LocalDate getFechaPreparacion() {
         return fechaPreparacion;
     }
 
-    public void setFechaPreparacion(LocalDateTime fechaPreparacion) {
+    public void setFechaPreparacion(LocalDate fechaPreparacion) {
         this.fechaPreparacion = fechaPreparacion;
     }
 
-    public LocalDateTime getFechaEnvio() {
+    public LocalTime getHoraPreparacion() {
+        return horaPreparacion;
+    }
+
+    public void setHoraPreparacion(LocalTime horaPreparacion) {
+        this.horaPreparacion = horaPreparacion;
+    }
+
+    public LocalDate getFechaEnvio() {
         return fechaEnvio;
     }
 
-    public void setFechaEnvio(LocalDateTime fechaEnvio) {
+    public void setFechaEnvio(LocalDate fechaEnvio) {
         this.fechaEnvio = fechaEnvio;
     }
 
-    public LocalDateTime getFechaEntrega() {
+    public LocalTime getHoraEnvio() {
+        return horaEnvio;
+    }
+
+    public void setHoraEnvio(LocalTime horaEnvio) {
+        this.horaEnvio = horaEnvio;
+    }
+
+    public LocalDate getFechaEntrega() {
         return fechaEntrega;
     }
 
-    public void setFechaEntrega(LocalDateTime fechaEntrega) {
+    public void setFechaEntrega(LocalDate fechaEntrega) {
         this.fechaEntrega = fechaEntrega;
+    }
+
+    public LocalTime getHoraEntrega() {
+        return horaEntrega;
+    }
+
+    public void setHoraEntrega(LocalTime horaEntrega) {
+        this.horaEntrega = horaEntrega;
+    }
+
+    public LocalDateTime getFechaPedido() {
+        return fechaPedido;
     }
 
     public EstadoPedido getEstado() {

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import edu.uvg.gestionpedidos.dto.DetallePedidoDTO;
 import edu.uvg.gestionpedidos.dto.PedidoDTO;
@@ -18,6 +19,7 @@ import edu.uvg.gestionpedidos.entity.Pedido;
 import edu.uvg.gestionpedidos.service.ClienteService;
 import edu.uvg.gestionpedidos.service.PedidoService;
 import edu.uvg.gestionpedidos.service.ProductoService;
+import edu.uvg.gestionpedidos.entity.EstadoPedido;
 
 @Controller
 @RequestMapping("/pedidos")
@@ -93,6 +95,49 @@ public class PedidoController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
         }
+    }
+
+    @PostMapping("/{id}/estado")
+    public String actualizarEstado(
+            @PathVariable Long id,
+            @RequestParam(required = false) String nuevoEstado,
+            RedirectAttributes mensajes) {
+
+        // Comprueba que el pedido exista antes de procesar el cambio.
+        try {
+            pedidoService.obtenerPorId(id);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, e.getMessage(), e);
+        }
+
+        EstadoPedido estado;
+
+        try {
+            if (nuevoEstado == null || nuevoEstado.isBlank()) {
+                throw new IllegalArgumentException();
+            }
+
+            estado = EstadoPedido.valueOf(nuevoEstado);
+
+        } catch (IllegalArgumentException e) {
+            mensajes.addFlashAttribute(
+                    "error", "Selecciona un estado válido.");
+
+            return "redirect:/pedidos/" + id;
+        }
+
+        try {
+            pedidoService.actualizarEstado(id, estado);
+
+            mensajes.addFlashAttribute(
+                    "exito", "El estado del pedido se actualizó correctamente.");
+
+        } catch (IllegalArgumentException e) {
+            mensajes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/pedidos/" + id;
     }
 
     private void cargarOpcionesFormulario(Model model) {

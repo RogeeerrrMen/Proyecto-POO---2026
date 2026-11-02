@@ -3,6 +3,8 @@ package edu.uvg.gestionpedidos.service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import edu.uvg.gestionpedidos.entity.Producto;
 import edu.uvg.gestionpedidos.repository.ClienteRepository;
 import edu.uvg.gestionpedidos.repository.PedidoRepository;
 import edu.uvg.gestionpedidos.repository.ProductoRepository;
+import edu.uvg.gestionpedidos.entity.EstadoPedido;
 
 @Service
 public class PedidoService {
@@ -44,8 +47,13 @@ public class PedidoService {
         Pedido pedido = new Pedido(codigo, cliente, direccion);
 
         pedido.setFechaPreparacion(datos.getFechaPreparacion());
+        pedido.setHoraPreparacion(datos.getHoraPreparacion());
+
         pedido.setFechaEnvio(datos.getFechaEnvio());
+        pedido.setHoraEnvio(datos.getHoraEnvio());
+
         pedido.setFechaEntrega(datos.getFechaEntrega());
+        pedido.setHoraEntrega(datos.getHoraEntrega());
         pedido.setObservaciones(limpiarTexto(datos.getObservaciones()));
 
         for (DetallePedidoDTO detalle : datos.getDetalles()) {
@@ -79,6 +87,28 @@ public class PedidoService {
         return pedidoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("El pedido no existe."));
     }
 
+    @Transactional
+    public Pedido actualizarEstado(Long id, EstadoPedido nuevoEstado) {
+        if (nuevoEstado == null) {
+            throw new IllegalArgumentException("Debes seleccionar un estado.");
+        }
+
+        Pedido pedido = obtenerPorId(id);
+
+        switch (nuevoEstado) {
+            case CONFIRMADO -> pedido.confirmar();
+            case EN_PREPARACION -> pedido.iniciarPreparacion();
+            case LISTO -> pedido.marcarListo();
+            case ENVIADO -> pedido.marcarEnviado();
+            case ENTREGADO -> pedido.marcarEntregado();
+            case FALLIDO -> pedido.marcarFallido();
+            case CANCELADO -> pedido.cancelar();
+            case REGISTRADO -> throw new IllegalArgumentException("No se puede volver al estado REGISTRADO.");
+        }
+
+        return pedidoRepository.save(pedido);
+    }
+
     private BigDecimal obtenerPrecioParaPedido(Producto producto) {
         double precio = producto.getPrecio();
 
@@ -90,11 +120,23 @@ public class PedidoService {
         // Pendiente: coordinar con Roger Producto.precio como BigDecimal.
         return BigDecimal.valueOf(precio);
     }
+    private void validarFechaYHora(LocalDate fecha, LocalTime hora, String etapa) {
+
+        if (hora != null && fecha == null) {
+            throw new IllegalArgumentException("Selecciona la fecha de " + etapa + " antes de indicar una hora.");
+        }
+    }
 
     private void validarFormulario(PedidoDTO datos) {
         if (datos == null) {
             throw new IllegalArgumentException("Los datos del pedido son obligatorios.");
         }
+
+        validarFechaYHora(datos.getFechaPreparacion(), datos.getHoraPreparacion(),"preparación");
+
+        validarFechaYHora(datos.getFechaEnvio(), datos.getHoraEnvio(), "envío");
+
+        validarFechaYHora(datos.getFechaEntrega(), datos.getHoraEntrega(),"entrega");
 
         if (datos.getClienteId() == null || datos.getClienteId() <= 0) {
             throw new IllegalArgumentException("Debes seleccionar un cliente.");

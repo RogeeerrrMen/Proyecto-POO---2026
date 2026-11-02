@@ -1,6 +1,7 @@
 package edu.uvg.gestionpedidos.dto;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,14 +13,23 @@ public class PedidoDTO {
 
     private List<DetallePedidoDTO> detalles = new ArrayList<>();
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime fechaPreparacion;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate fechaPreparacion;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime fechaEnvio;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    private LocalTime horaPreparacion;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime fechaEntrega;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate fechaEnvio;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    private LocalTime horaEnvio;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate fechaEntrega;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    private LocalTime horaEntrega;
 
     private String observaciones;
 
@@ -48,28 +58,52 @@ public class PedidoDTO {
         this.detalles = detalles;
     }
 
-    public LocalDateTime getFechaPreparacion() {
+    public LocalDate getFechaPreparacion() {
         return fechaPreparacion;
     }
 
-    public void setFechaPreparacion(LocalDateTime fechaPreparacion) {
+    public void setFechaPreparacion(LocalDate fechaPreparacion) {
         this.fechaPreparacion = fechaPreparacion;
     }
 
-    public LocalDateTime getFechaEnvio() {
+    public LocalTime getHoraPreparacion() {
+        return horaPreparacion;
+    }
+
+    public void setHoraPreparacion(LocalTime horaPreparacion) {
+        this.horaPreparacion = horaPreparacion;
+    }
+
+    public LocalDate getFechaEnvio() {
         return fechaEnvio;
     }
 
-    public void setFechaEnvio(LocalDateTime fechaEnvio) {
+    public void setFechaEnvio(LocalDate fechaEnvio) {
         this.fechaEnvio = fechaEnvio;
     }
 
-    public LocalDateTime getFechaEntrega() {
+    public LocalTime getHoraEnvio() {
+        return horaEnvio;
+    }
+
+    public void setHoraEnvio(LocalTime horaEnvio) {
+        this.horaEnvio = horaEnvio;
+    }
+
+    public LocalDate getFechaEntrega() {
         return fechaEntrega;
     }
 
-    public void setFechaEntrega(LocalDateTime fechaEntrega) {
+    public void setFechaEntrega(LocalDate fechaEntrega) {
         this.fechaEntrega = fechaEntrega;
+    }
+
+    public LocalTime getHoraEntrega() {
+        return horaEntrega;
+    }
+
+    public void setHoraEntrega(LocalTime horaEntrega) {
+        this.horaEntrega = horaEntrega;
     }
 
     public String getObservaciones() {
