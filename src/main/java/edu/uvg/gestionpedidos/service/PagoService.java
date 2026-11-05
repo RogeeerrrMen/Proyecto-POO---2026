@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import edu.uvg.gestionpedidos.entity.Pago;
 import edu.uvg.gestionpedidos.entity.Pedido;
+import edu.uvg.gestionpedidos.entity.EstadoPago;
+
 import edu.uvg.gestionpedidos.repository.PagoRepository;
 import edu.uvg.gestionpedidos.repository.PedidoRepository;
 
@@ -61,18 +63,40 @@ public class PagoService {
         }
     }
 
-    @Transactional
+    
+    @Transactional(readOnly = true)
     public ResumenPagoDTO consultarResumen(Long pedidoId) {
 
-        Pago pago = obtenerOCrearPago(pedidoId);
+        validarPedidoId(pedidoId);
+
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "El pedido no existe."
+                ));
+
+        BigDecimal totalPedido = pedido.calcularTotal();
+
+        Pago pago = pagoRepository.findByPedidoId(pedidoId)
+                .orElse(null);
+
+        BigDecimal totalAbonado = BigDecimal.ZERO;
+        EstadoPago estado = EstadoPago.PENDIENTE;
+
+        if (pago != null) {
+            totalAbonado = pago.getTotalAbonado();
+            estado = pago.getEstado();
+        }
+
+        BigDecimal saldoPendiente =
+                totalPedido.subtract(totalAbonado);
 
         return new ResumenPagoDTO(
-
             pedidoId,
-            pago.getTotalPedido(),
-            pago.getTotalAbonado(),
-            pago.getSaldoPendiente(),
-            pago.getEstado()
+            totalPedido,
+            totalAbonado,
+            saldoPendiente,
+            estado
         );
     }
+
 }
