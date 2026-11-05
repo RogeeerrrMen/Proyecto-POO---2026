@@ -31,6 +31,11 @@
                     Código:
                     <span th:text="${pedido.codigo}"></span>
                 </p>
+
+                <a class="btn btn-primary"
+                    th:href="@{/pedidos/{id}/pago(id=${pedido.id})}">
+                        Gestionar pagos
+                    </a>
             </div>
 
             <span class="pedido-estado"
@@ -155,6 +160,35 @@
 
         <section aria-labelledby="entrega-title">
             <h2 id="entrega-title">Datos de entrega</h2>
+
+            
+        <section aria-labelledby="resumen-pago-title">
+            <h2 id="resumen-pago-title">Resumen del pago</h2>
+
+            <dl>
+                <dt>Total del pedido</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(
+                        resumenPago.totalPedido, 1, 2)}"></span>
+                </dd>
+
+                <dt>Total abonado</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(
+                        resumenPago.totalAbonado, 1, 2)}"></span>
+                </dd>
+
+                <dt>Saldo pendiente</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(
+                        resumenPago.saldoPendiente, 1, 2)}"></span>
+                </dd>
+
+                <dt>Estado del pago</dt>
+                <dd th:text="${resumenPago.estado}"></dd>
+            </dl>
+        </section>
+
 
             <dl>
                 <dt>Receptor</dt>
