@@ -20,6 +20,8 @@ import edu.uvg.gestionpedidos.service.ClienteService;
 import edu.uvg.gestionpedidos.service.PedidoService;
 import edu.uvg.gestionpedidos.service.ProductoService;
 import edu.uvg.gestionpedidos.entity.EstadoPedido;
+import edu.uvg.gestionpedidos.service.PagoService;
+import edu.uvg.gestionpedidos.dto.ResumenPagoDTO;
 
 @Controller
 @RequestMapping("/pedidos")
@@ -28,12 +30,14 @@ public class PedidoController {
     private final PedidoService pedidoService;
     private final ClienteService clienteService;
     private final ProductoService productoService;
+    private final PagoService pagoService;
 
-    public PedidoController(PedidoService pedidoService, ClienteService clienteService, ProductoService productoService) {
+    public PedidoController(PedidoService pedidoService, ClienteService clienteService, ProductoService productoService, PagoService pagoService) {
 
         this.pedidoService = pedidoService;
         this.clienteService = clienteService;
         this.productoService = productoService;
+        this.pagoService = pagoService;
     }
 
     @GetMapping
@@ -84,18 +88,31 @@ public class PedidoController {
         }
     }
 
+    
     @GetMapping("/{id}")
     public String consultar(@PathVariable Long id, Model model) {
 
         try {
-            model.addAttribute("pedido", pedidoService.obtenerPorId(id));
+
+            Pedido pedido = pedidoService.obtenerPorId(id);
+
+            ResumenPagoDTO resumen = pagoService.consultarResumen(id);
+
+            model.addAttribute("pedido", pedido);
+            model.addAttribute("resumenPago", resumen);
 
             return "detalle-pedido";
 
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                e.getMessage(),
+                e
+            );
         }
     }
+
 
     @PostMapping("/{id}/estado")
     public String actualizarEstado(
