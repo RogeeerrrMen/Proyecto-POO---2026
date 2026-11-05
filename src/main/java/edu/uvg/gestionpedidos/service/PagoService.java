@@ -1,4 +1,5 @@
 package edu.uvg.gestionpedidos.service;
+import edu.uvg.gestionpedidos.dto.ResumenPagoDTO;
 
 import java.math.BigDecimal;
 
@@ -58,5 +59,20 @@ public class PagoService {
         if (pedidoId == null || pedidoId <= 0) {
             throw new IllegalArgumentException("El identificador del pedido no es válido.");
         }
+    }
+
+    @Transactional
+    public ResumenPagoDTO consultarResumen(Long pedidoId) {
+
+        Pago pago = obtenerOCrearPago(pedidoId);
+
+        return new ResumenPagoDTO(
+
+            pedidoId,
+            pago.getTotalPedido(),
+            pago.getTotalAbonado(),
+            pago.getSaldoPendiente(),
+            pago.getEstado()
+        );
     }
 }

@@ -1,4 +1,5 @@
 package edu.uvg.gestionpedidos.controller;
+import edu.uvg.gestionpedidos.dto.ResumenPagoDTO;
 
 import java.math.BigDecimal;
 
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import edu.uvg.gestionpedidos.entity.Pago;
 import edu.uvg.gestionpedidos.service.PagoService;
 
 @Controller
@@ -24,6 +24,7 @@ public class PagoController {
     }
 
     @GetMapping("/pedidos/{pedidoId}/pago")
+
     public String mostrarPago(
 
             @PathVariable Long pedidoId,
@@ -32,13 +33,13 @@ public class PagoController {
 
         try {
 
-            Pago pago = pagoService.obtenerOCrearPago(pedidoId);
+            ResumenPagoDTO resumen = pagoService.consultarResumen(pedidoId);
 
-            model.addAttribute("pedidoId", pedidoId);
-            model.addAttribute("totalPedido", pago.getTotalPedido());
-            model.addAttribute("totalAbonado", pago.getTotalAbonado());
-            model.addAttribute("saldoPendiente", pago.getSaldoPendiente());
-            model.addAttribute("estadoPago", pago.getEstado());
+            model.addAttribute("pedidoId", resumen.getPedidoId());
+            model.addAttribute("totalPedido", resumen.getTotalPedido());
+            model.addAttribute("totalAbonado", resumen.getTotalAbonado());
+            model.addAttribute("saldoPendiente", resumen.getSaldoPendiente());
+            model.addAttribute("estadoPago", resumen.getEstado());
 
             return "pago-pedido";
 
