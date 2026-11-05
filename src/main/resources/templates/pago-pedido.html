@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Gestión de pagos</title>
+
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+
+<body>
+
+<header class="navbar">
+    <a class="logo" th:href="@{/dashboard}">
+        Gestión de Pedidos
+    </a>
+
+    <nav class="nav-links">
+        <a class="btn btn-secondary" th:href="@{/pedidos}">
+            Volver a pedidos
+        </a>
+    </nav>
+</header>
+
+<main class="main-container">
+
+    <section class="card">
+
+        <h1 class="card-title">Gestión de pagos</h1>
+
+        <p class="card-subtitle">
+            Información financiera del pedido.
+        </p>
+
+        <div th:if="${mensaje}" class="form-success"
+             role="status">
+            <p th:text="${mensaje}"></p>
+        </div>
+
+        <div th:if="${error}" class="form-error"
+             role="alert">
+            <p th:text="${error}"></p>
+        </div>
+
+        <h2>Resumen del pedido</h2>
+
+        <p>
+            <strong>Pedido:</strong>
+            <span th:text="${pedidoId}"></span>
+        </p>
+
+        <p>
+            <strong>Total:</strong>
+            Q<span th:text="${totalPedido}"></span>
+        </p>
+
+        <p>
+            <strong>Total abonado:</strong>
+            Q<span th:text="${totalAbonado}"></span>
+        </p>
+
+        <p>
+            <strong>Saldo pendiente:</strong>
+            Q<span th:text="${saldoPendiente}"></span>
+        </p>
+
+        <p>
+            <strong>Estado del pago:</strong>
+            <span th:text="${estadoPago}"></span>
+        </p>
+
+        <hr>
+
+        <h2>Registrar abono</h2>
+
+        <form th:if="${saldoPendiente.signum() > 0}"
+              th:action="@{/pedidos/{id}/pago/abonar(id=${pedidoId})}"
+              method="post">
+
+            <div class="form-group">
+                <label for="monto">Monto del abono (Q)</label>
+
+                <input
+                    type="number"
+                    id="monto"
+                    name="monto"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="0.00"
+                    required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Registrar abono
+            </button>
+
+        </form>
+
+        <p th:if="${saldoPendiente.signum() == 0}">
+            Este pedido ya está completamente pagado.
+        </p>
+
+    </section>
+
+</main>
+
+</body>
+</html>
