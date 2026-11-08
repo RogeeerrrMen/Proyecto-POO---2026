@@ -168,38 +168,8 @@
             </p>
 
             <p th:if="${pedido.modalidadEntrega.name() == 'RECOGER_NEGOCIO'}">
-                <span th:text="${pedido.modalidadEntrega.descripcion}"></span>
+                El cliente recogerá el pedido en el negocio.
             </p>
-
-        </section>
-
-        <section aria-labelledby="resumen-pago-title">
-            <h2 id="resumen-pago-title">Resumen del pago</h2>
-
-            <dl>
-                <dt>Total del pedido</dt>
-                <dd>
-                    Q<span th:text="${#numbers.formatDecimal(
-                        resumenPago.totalPedido, 1, 2)}"></span>
-                </dd>
-
-                <dt>Total abonado</dt>
-                <dd>
-                    Q<span th:text="${#numbers.formatDecimal(
-                        resumenPago.totalAbonado, 1, 2)}"></span>
-                </dd>
-
-                <dt>Saldo pendiente</dt>
-                <dd>
-                    Q<span th:text="${#numbers.formatDecimal(
-                        resumenPago.saldoPendiente, 1, 2)}"></span>
-                </dd>
-
-                <dt>Estado del pago</dt>
-                <dd th:text="${resumenPago.estado}"></dd>
-            </dl>
-        </section>
-
 
             <dl th:if="${pedido.direccionEntrega != null}">
                 <dt>Receptor</dt>
@@ -212,54 +182,50 @@
                 <dd th:text="${pedido.direccionEntrega.direccion}"></dd>
 
                 <dt>Referencias</dt>
-                <dd th:text="${pedido.direccionEntrega.referencias
-                    ?: 'Sin referencias'}"></dd>
+                <dd th:text="${pedido.direccionEntrega.referencias ?: 'Sin referencias'}"></dd>
 
                 <dt>Enlace de mapa</dt>
-                <dd th:text="${pedido.direccionEntrega.enlaceMapa
-                    ?: 'Sin enlace'}"></dd>
+                <dd th:text="${pedido.direccionEntrega.enlaceMapa ?: 'Sin enlace'}"></dd>
+            </dl>
+        </section>
+
+        <section aria-labelledby="resumen-pago-title">
+            <h2 id="resumen-pago-title">Resumen del pago</h2>
+
+            <dl>
+                <dt>Total del pedido</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(resumenPago.totalPedido, 1, 2)}"></span>
+                </dd>
+
+                <dt>Total abonado</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(resumenPago.totalAbonado, 1, 2)}"></span>
+                </dd>
+
+                <dt>Saldo pendiente</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(resumenPago.saldoPendiente, 1, 2)}"></span>
+                </dd>
+
+                <dt>Estado del pago</dt>
+                <dd th:text="${resumenPago.estado}"></dd>
             </dl>
         </section>
 
         <section aria-labelledby="fechas-title">
-            <h2 id="fechas-title">Fechas de planificación</h2>
+            <h2 id="fechas-title">Fecha de entrega o recogida</h2>
 
             <dl>
-                <dt>Preparación</dt>
-                <dd>
-                    <span th:text="${pedido.fechaPreparacion != null
-                        ? #temporals.format(pedido.fechaPreparacion, 'dd/MM/yyyy')
-                        : 'Sin programar'}"></span>
+                <dt>Fecha</dt>
+                <dd th:text="${pedido.fechaEntrega != null
+                    ? #temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')
+                    : 'Sin programar'}"></dd>
 
-                    <span th:if="${pedido.fechaPreparacion != null}"
-                        th:text="${pedido.horaPreparacion != null
-                            ? ' — ' + #temporals.format(pedido.horaPreparacion, 'HH:mm')
-                            : ' — Sin hora especificada'}"></span>
-                </dd>
-
-                <dt>Envío</dt>
-                <dd>
-                    <span th:text="${pedido.fechaEnvio != null
-                        ? #temporals.format(pedido.fechaEnvio, 'dd/MM/yyyy')
-                        : 'Sin programar'}"></span>
-
-                    <span th:if="${pedido.fechaEnvio != null}"
-                        th:text="${pedido.horaEnvio != null
-                            ? ' — ' + #temporals.format(pedido.horaEnvio, 'HH:mm')
-                            : ' — Sin hora especificada'}"></span>
-                </dd>
-
-                <dt>Entrega</dt>
-                <dd>
-                    <span th:text="${pedido.fechaEntrega != null
-                        ? #temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')
-                        : 'Sin programar'}"></span>
-
-                    <span th:if="${pedido.fechaEntrega != null}"
-                        th:text="${pedido.horaEntrega != null
-                            ? ' — ' + #temporals.format(pedido.horaEntrega, 'HH:mm')
-                            : ' — Sin hora especificada'}"></span>
-                </dd>
+                <dt>Hora</dt>
+                <dd th:text="${pedido.horaEntrega != null
+                    ? #temporals.format(pedido.horaEntrega, 'HH:mm')
+                    : 'Sin hora especificada'}"></dd>
             </dl>
         </section>
 

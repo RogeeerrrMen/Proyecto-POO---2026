@@ -170,15 +170,11 @@
 
                 <div class="form-group">
                     <label for="modalidadEntrega">Modalidad de entrega</label>
-
-                    <select id="modalidadEntrega" th:field="*{modalidadEntrega}"required>
-                        <option value="ENVIO_DOMICILIO">
-                            Envío a domicilio
-                        </option>
-
-                        <option value="RECOGER_NEGOCIO">
-                            Recoger en el negocio
-                        </option>
+                    <select id="modalidadEntrega"
+                            th:field="*{modalidadEntrega}"
+                            required>
+                        <option value="ENVIO_DOMICILIO">Envío a domicilio</option>
+                        <option value="RECOGER_NEGOCIO">Recoger en el negocio</option>
                     </select>
                 </div>
 
@@ -187,111 +183,74 @@
                     No es necesario ingresar una dirección de entrega.
                 </p>
 
-
                 <div id="datos-entrega">
-                <div class="form-group">
-                    <label for="nombreReceptor">Nombre del receptor</label>
-                    <input type="text"
-                           id="nombreReceptor"
-                           th:field="*{nombreReceptor}"
-                           maxlength="255"
-                           required>
+                    <div class="form-group">
+                        <label for="nombreReceptor">Nombre del receptor</label>
+                        <input type="text"
+                               id="nombreReceptor"
+                               th:field="*{nombreReceptor}"
+                               maxlength="255"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefonoReceptor">Teléfono del receptor</label>
+                        <input type="tel"
+                               id="telefonoReceptor"
+                               th:field="*{telefonoReceptor}"
+                               pattern="\+?[0-9]+"
+                               title="Ingresa números con un + opcional al inicio."
+                               maxlength="255"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direccion">Dirección de entrega</label>
+                        <textarea id="direccion"
+                                  th:field="*{direccion}"
+                                  rows="3"
+                                  maxlength="255"
+                                  required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="referencias">Referencias (opcional)</label>
+                        <textarea id="referencias"
+                                  th:field="*{referencias}"
+                                  rows="2"
+                                  maxlength="255"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="enlaceMapa">Enlace de Google Maps (opcional)</label>
+                        <input type="url"
+                               id="enlaceMapa"
+                               th:field="*{enlaceMapa}"
+                               maxlength="255"
+                               placeholder="https://maps.google.com/...">
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="telefonoReceptor">
-                        Teléfono del receptor
-                    </label>
-
-                    <input type="tel"
-                           id="telefonoReceptor"
-                           th:field="*{telefonoReceptor}"
-                           pattern="\+?[0-9]+"
-                           title="Ingresa números con un + opcional al inicio."
-                           maxlength="255"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="direccion">Dirección de entrega</label>
-                    <textarea id="direccion"
-                              th:field="*{direccion}"
-                              rows="3"
-                              maxlength="255"
-                              required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="referencias">Referencias (opcional)</label>
-                    <textarea id="referencias"
-                              th:field="*{referencias}"
-                              rows="2"
-                              maxlength="255"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="enlaceMapa">
-                        Enlace de Google Maps (opcional)
-                    </label>
-
-                    <input type="url"
-                           id="enlaceMapa"
-                           th:field="*{enlaceMapa}"
-                           maxlength="255"
-                           placeholder="https://maps.google.com/...">
-                </div>
-                </div>
-
-                <h2>Fechas</h2>
+                <h2>Fecha de entrega o recogida</h2>
 
                 <p class="cliente-ayuda">
-                    Las fechas de planificación son opcionales.
-                    Puedes seleccionar una fecha sin indicar una hora.
+                    La fecha de entrega o recogida es opcional.
+                    Si indicas una hora, también debes seleccionar una fecha.
                     La fecha de registro se asigna automáticamente.
                 </p>
 
                 <div class="form-group">
-                    <label for="fechaPreparacion">Fecha de preparación</label>
+                    <label for="fechaEntrega">Fecha de entrega o recogida</label>
                     <input type="date"
-                        id="fechaPreparacion"
-                        th:field="*{fechaPreparacion}">
+                           id="fechaEntrega"
+                           th:field="*{fechaEntrega}">
                 </div>
 
                 <div class="form-group">
-                    <label for="horaPreparacion">
-                        Hora de preparación (opcional)
-                    </label>
+                    <label for="horaEntrega">Hora de entrega o recogida (opcional)</label>
                     <input type="time"
-                        id="horaPreparacion"
-                        th:field="*{horaPreparacion}">
-                </div>
-
-                <div class="form-group">
-                    <label for="fechaEnvio">Fecha de envío</label>
-                    <input type="date"
-                        id="fechaEnvio"
-                        th:field="*{fechaEnvio}">
-                </div>
-
-                <div class="form-group">
-                    <label for="horaEnvio">Hora de envío (opcional)</label>
-                    <input type="time"
-                        id="horaEnvio"
-                        th:field="*{horaEnvio}">
-                </div>
-
-                <div class="form-group">
-                    <label for="fechaEntrega">Fecha de entrega</label>
-                    <input type="date"
-                        id="fechaEntrega"
-                        th:field="*{fechaEntrega}">
-                </div>
-
-                <div class="form-group">
-                    <label for="horaEntrega">Hora de entrega (opcional)</label>
-                    <input type="time"
-                        id="horaEntrega"
-                        th:field="*{horaEntrega}">
+                           id="horaEntrega"
+                           th:field="*{horaEntrega}">
                 </div>
 
                 <div class="form-group">
@@ -465,16 +424,10 @@
         detalles.querySelectorAll("tr").forEach(fila => cargarPrecioCatalogo(fila, true));
         actualizarTotal();
 
-                actualizarIndices();
-        actualizarTotal();
-
         const modalidadEntrega = document.getElementById("modalidadEntrega");
         const datosEntrega = document.getElementById("datos-entrega");
         const avisoRecoger = document.getElementById("aviso-recoger");
-
-        const camposEntrega = datosEntrega.querySelectorAll(
-            "input, textarea, select"
-        );
+        const camposEntrega = datosEntrega.querySelectorAll("input, textarea, select");
 
         camposEntrega.forEach(campo => {
             campo.dataset.obligatorio = String(campo.required);
@@ -482,22 +435,16 @@
 
         function actualizarModalidadEntrega() {
             const recoger = modalidadEntrega.value === "RECOGER_NEGOCIO";
-
             datosEntrega.hidden = recoger;
             avisoRecoger.hidden = !recoger;
 
             camposEntrega.forEach(campo => {
                 campo.disabled = recoger;
-                campo.required = !recoger
-                    && campo.dataset.obligatorio === "true";
+                campo.required = !recoger && campo.dataset.obligatorio === "true";
             });
         }
 
-        modalidadEntrega.addEventListener(
-            "change",
-            actualizarModalidadEntrega
-        );
-
+        modalidadEntrega.addEventListener("change", actualizarModalidadEntrega);
         actualizarModalidadEntrega();
     </script>
 </body>
