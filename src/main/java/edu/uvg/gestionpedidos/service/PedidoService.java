@@ -1,6 +1,7 @@
 package edu.uvg.gestionpedidos.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 import java.time.LocalDate;
@@ -63,7 +64,7 @@ public class PedidoService {
                 throw new IllegalArgumentException("El producto " + producto.getNombre() + " está inactivo.");
             }
 
-            BigDecimal precioUnitario = obtenerPrecioParaPedido(producto);
+            BigDecimal precioUnitario = validarPrecioUnitario(detalle.getPrecioUnitario());
 
             pedido.agregarProducto(producto, detalle.getCantidad(), precioUnitario);
         }
@@ -109,17 +110,18 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
-    private BigDecimal obtenerPrecioParaPedido(Producto producto) {
-        double precio = producto.getPrecio();
-
-        if (!Double.isFinite(precio) || precio < 0) {
-            throw new IllegalArgumentException("El producto " + producto.getNombre() + " tiene un precio inválido.");
+    private BigDecimal validarPrecioUnitario(BigDecimal precio) {
+        if (precio == null || precio.signum() < 0) {
+            throw new IllegalArgumentException("El precio unitario es obligatorio y no puede ser negativo.");
         }
 
-        // Adaptación temporal del catálogo actual.
-        // Pendiente: coordinar con Roger Producto.precio como BigDecimal.
-        return BigDecimal.valueOf(precio);
+        try {
+            return precio.setScale(2, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("El precio unitario debe tener como máximo dos decimales.");
+        }
     }
+
     private void validarFechaYHora(LocalDate fecha, LocalTime hora, String etapa) {
 
         if (hora != null && fecha == null) {

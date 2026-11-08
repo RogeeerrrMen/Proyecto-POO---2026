@@ -42,6 +42,7 @@ class PedidoServiceTest {
         DetallePedidoDTO detalle = new DetallePedidoDTO();
         detalle.setProductoId(productoId);
         detalle.setCantidad(cantidad);
+        detalle.setPrecioUnitario(new BigDecimal(productoId == 20L ? "7.25" : "25.50"));
         return detalle;
     }
 
@@ -294,5 +295,48 @@ class PedidoServiceTest {
         }
 
         verifyNoInteractions(pedidoRepository, clienteRepository, productoRepository);
+    }
+    @Test
+    void registrarPrecioAcordadoSinModificarCatalogo() {
+        prepararClienteExistente();
+        prepararGuardado();
+        Producto producto = crearProducto(100.00);
+        when(productoRepository.findById(10L)).thenReturn(Optional.of(producto));
+        PedidoDTO datos = crearFormulario();
+        datos.getDetalles().get(0).setPrecioUnitario(new BigDecimal("90.00"));
+
+        Pedido pedido = pedidoService.registrar(datos);
+
+        comprobarMonto("90.00", pedido.getDetalles().get(0).getPrecioUnitario());
+        comprobarMonto("180.00", pedido.getTotal());
+        assertEquals(100.00, producto.getPrecio());
+        verify(productoRepository, never()).save(any(Producto.class));
+        producto.actualizarPrecio(120.00);
+        comprobarMonto("180.00", pedido.getTotal());
+    }
+
+    @Test
+    void rechazarPrecioAusenteNegativoOConFraccionesDeCentavo() {
+        for (BigDecimal precio : new BigDecimal[] {
+                null, new BigDecimal("-1.00"), new BigDecimal("10.001")}) {
+            PedidoDTO datos = crearFormulario();
+            datos.getDetalles().get(0).setPrecioUnitario(precio);
+            prepararClienteExistente();
+            when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+
+            assertThrows(IllegalArgumentException.class, () -> pedidoService.registrar(datos));
+        }
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void permitirPrecioCero() {
+        prepararClienteExistente();
+        prepararGuardado();
+        when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+        PedidoDTO datos = crearFormulario();
+        datos.getDetalles().get(0).setPrecioUnitario(BigDecimal.ZERO);
+
+        comprobarMonto("0.00", pedidoService.registrar(datos).getTotal());
     }
 }
