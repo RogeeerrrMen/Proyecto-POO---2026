@@ -56,7 +56,7 @@
 <section aria-labelledby="estado-title">
     <h2 id="estado-title">Actualizar estado</h2>
 
-    <form th:if="${!#lists.isEmpty(pedido.estado.estadosPermitidos)}"
+    <form th:if="${!#lists.isEmpty(pedido.estadosPermitidos)}"
           th:action="@{/pedidos/{id}/estado(id=${pedido.id})}"
           method="post"
           onsubmit="if (this.elements['nuevoEstado'].value === 'CANCELADO') {
@@ -72,7 +72,7 @@
                 Selecciona un estado
             </option>
 
-            <option th:each="estado : ${pedido.estado.estadosPermitidos}"
+            <option th:each="estado : ${pedido.estadosPermitidos}"
                     th:value="${estado.name()}"
                     th:text="${#strings.replace(estado.name(), '_', ' ')}">
             </option>
@@ -83,7 +83,7 @@
         </button>
     </form>
 
-    <p th:if="${#lists.isEmpty(pedido.estado.estadosPermitidos)}">
+    <p th:if="${#lists.isEmpty(pedido.estadosPermitidos)}">
         Este pedido está en un estado final y no permite más cambios.
     </p>
 </section>
@@ -162,7 +162,17 @@
         <section aria-labelledby="entrega-title">
             <h2 id="entrega-title">Datos de entrega</h2>
 
-            
+            <p>
+                <strong>Modalidad:</strong>
+                <span th:text="${pedido.modalidadEntrega.descripcion}"></span>
+            </p>
+
+            <p th:if="${pedido.modalidadEntrega.name() == 'RECOGER_NEGOCIO'}">
+                <span th:text="${pedido.modalidadEntrega.descripcion}"></span>
+            </p>
+
+        </section>
+
         <section aria-labelledby="resumen-pago-title">
             <h2 id="resumen-pago-title">Resumen del pago</h2>
 
@@ -191,7 +201,7 @@
         </section>
 
 
-            <dl>
+            <dl th:if="${pedido.direccionEntrega != null}">
                 <dt>Receptor</dt>
                 <dd th:text="${pedido.direccionEntrega.nombreReceptor}"></dd>
 

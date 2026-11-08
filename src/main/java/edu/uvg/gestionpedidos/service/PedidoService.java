@@ -1,5 +1,7 @@
 package edu.uvg.gestionpedidos.service;
 
+import edu.uvg.gestionpedidos.entity.ModalidadEntrega;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -41,11 +43,15 @@ public class PedidoService {
 
         Cliente cliente = clienteRepository.findById(datos.getClienteId()).orElseThrow(() -> new IllegalArgumentException("El cliente seleccionado no existe."));
 
-        DireccionEntrega direccion = crearDireccion(datos);
+        DireccionEntrega direccion = null;
+
+            if (datos.getModalidadEntrega() == ModalidadEntrega.ENVIO_DOMICILIO) {
+                direccion = crearDireccion(datos);
+            }
 
         String codigo = "PED-" + UUID.randomUUID();
 
-        Pedido pedido = new Pedido(codigo, cliente, direccion);
+        Pedido pedido = new Pedido(codigo, cliente, direccion, datos.getModalidadEntrega());
 
         pedido.setFechaPreparacion(datos.getFechaPreparacion());
         pedido.setHoraPreparacion(datos.getHoraPreparacion());
@@ -132,6 +138,10 @@ public class PedidoService {
     private void validarFormulario(PedidoDTO datos) {
         if (datos == null) {
             throw new IllegalArgumentException("Los datos del pedido son obligatorios.");
+        }
+
+        if (datos.getModalidadEntrega() == null) {
+            throw new IllegalArgumentException("Debes seleccionar una modalidad de entrega.");
         }
 
         validarFechaYHora(datos.getFechaPreparacion(), datos.getHoraPreparacion(),"preparación");

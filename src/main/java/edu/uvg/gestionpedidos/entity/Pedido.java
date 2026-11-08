@@ -40,9 +40,13 @@ public class Pedido {
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL, optional = false)
-    @JoinColumn(name = "direccion_entrega_id", nullable = false, unique = true)
+    @OneToOne(cascade = CascadeType.ALL, optional = true)
+    @JoinColumn(name = "direccion_entrega_id", nullable = true, unique = true)
     private DireccionEntrega direccionEntrega;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "modalidad_entrega", nullable = false)
+    private ModalidadEntrega modalidadEntrega = ModalidadEntrega.ENVIO_DOMICILIO;
 
     @Column(nullable = false)
     private LocalDateTime fechaPedido;
@@ -68,25 +72,44 @@ public class Pedido {
     }
 
     public Pedido(String codigo, Cliente cliente, DireccionEntrega direccionEntrega) {
+    this(codigo, cliente, direccionEntrega, ModalidadEntrega.ENVIO_DOMICILIO);
+}
 
-        if (codigo == null || codigo.isBlank()) {
-            throw new IllegalArgumentException("El código del pedido es obligatorio.");
-        }
+    public Pedido(String codigo, Cliente cliente, DireccionEntrega direccionEntrega, ModalidadEntrega modalidadEntrega) {
 
-        if (cliente == null) {
-            throw new IllegalArgumentException("El cliente es obligatorio.");
-        }
-
-        if (direccionEntrega == null || !direccionEntrega.validarDatos()) {
-            throw new IllegalArgumentException("Los datos de entrega están incompletos o son inválidos.");
-        }
-
-        this.codigo = codigo.trim();
-        this.cliente = cliente;
-        this.direccionEntrega = direccionEntrega;
-        this.fechaPedido = LocalDateTime.now();
-        this.estado = EstadoPedido.REGISTRADO;
+    if (codigo == null || codigo.isBlank()) {
+        throw new IllegalArgumentException("El código del pedido es obligatorio.");
     }
+
+    if (cliente == null) {
+        throw new IllegalArgumentException("El cliente es obligatorio.");
+    }
+
+    this.codigo = codigo.trim();
+    this.cliente = cliente;
+    this.direccionEntrega = direccionEntrega;
+    this.modalidadEntrega = modalidadEntrega;
+
+    validarDatosEntrega();
+
+    this.fechaPedido = LocalDateTime.now();
+    this.estado = EstadoPedido.REGISTRADO;
+    }
+
+    private void validarDatosEntrega() {
+    if (modalidadEntrega == null) {
+        throw new IllegalArgumentException("Debes seleccionar una modalidad de entrega.");
+    }
+
+    if (modalidadEntrega == ModalidadEntrega.ENVIO_DOMICILIO
+            && direccionEntrega == null) {
+        throw new IllegalArgumentException("Los envíos a domicilio requieren una dirección.");
+    }
+
+    if (direccionEntrega != null && !direccionEntrega.validarDatos()) {
+        throw new IllegalArgumentException("Los datos de entrega están incompletos o son inválidos.");
+    }
+}
 
     public void agregarProducto(Producto producto, int cantidad, BigDecimal precioUnitario) {
 
@@ -108,23 +131,34 @@ public class Pedido {
     public void validarParaRegistro() {
         if (cliente == null) {
             throw new IllegalArgumentException("El pedido debe tener un cliente.");
-        }
+    }
 
         if (detalles.isEmpty()) {
             throw new IllegalArgumentException("El pedido debe contener al menos un producto.");
-        }
-
-        if (direccionEntrega == null || !direccionEntrega.validarDatos()) {
-            throw new IllegalArgumentException("Los datos de entrega son inválidos.");
-        }
     }
+
+    validarDatosEntrega();
+    }
+
+    public ModalidadEntrega getModalidadEntrega() {
+        return modalidadEntrega;
+    }
+
+    public List<EstadoPedido> getEstadosPermitidos() {
+        if (estado == EstadoPedido.LISTO
+            && modalidadEntrega == ModalidadEntrega.RECOGER_NEGOCIO) {
+        return List.of(EstadoPedido.ENTREGADO);
+    }
+
+    return estado.getEstadosPermitidos();
+}
 
     private void cambiarEstado(EstadoPedido nuevoEstado) {
         if (nuevoEstado == null) {
             throw new IllegalArgumentException("Debes seleccionar un estado.");
         }
 
-        if (!estado.puedeCambiarA(nuevoEstado)) {
+        if (!getEstadosPermitidos().contains(nuevoEstado)) {
             throw new IllegalArgumentException("No se puede cambiar el pedido de " + estado + " a " + nuevoEstado + ".");
         }
 
@@ -178,6 +212,8 @@ public class Pedido {
     public DireccionEntrega getDireccionEntrega() {
         return direccionEntrega;
     }
+
+
 
     public LocalDate getFechaPreparacion() {
         return fechaPreparacion;

@@ -169,6 +169,27 @@
                 <h2>Entrega</h2>
 
                 <div class="form-group">
+                    <label for="modalidadEntrega">Modalidad de entrega</label>
+
+                    <select id="modalidadEntrega" th:field="*{modalidadEntrega}"required>
+                        <option value="ENVIO_DOMICILIO">
+                            Envío a domicilio
+                        </option>
+
+                        <option value="RECOGER_NEGOCIO">
+                            Recoger en el negocio
+                        </option>
+                    </select>
+                </div>
+
+                <p id="aviso-recoger" hidden>
+                    El cliente recogerá el pedido en el negocio.
+                    No es necesario ingresar una dirección de entrega.
+                </p>
+
+
+                <div id="datos-entrega">
+                <div class="form-group">
                     <label for="nombreReceptor">Nombre del receptor</label>
                     <input type="text"
                            id="nombreReceptor"
@@ -218,6 +239,7 @@
                            th:field="*{enlaceMapa}"
                            maxlength="255"
                            placeholder="https://maps.google.com/...">
+                </div>
                 </div>
 
                 <h2>Fechas</h2>
@@ -442,6 +464,41 @@
         actualizarIndices();
         detalles.querySelectorAll("tr").forEach(fila => cargarPrecioCatalogo(fila, true));
         actualizarTotal();
+
+                actualizarIndices();
+        actualizarTotal();
+
+        const modalidadEntrega = document.getElementById("modalidadEntrega");
+        const datosEntrega = document.getElementById("datos-entrega");
+        const avisoRecoger = document.getElementById("aviso-recoger");
+
+        const camposEntrega = datosEntrega.querySelectorAll(
+            "input, textarea, select"
+        );
+
+        camposEntrega.forEach(campo => {
+            campo.dataset.obligatorio = String(campo.required);
+        });
+
+        function actualizarModalidadEntrega() {
+            const recoger = modalidadEntrega.value === "RECOGER_NEGOCIO";
+
+            datosEntrega.hidden = recoger;
+            avisoRecoger.hidden = !recoger;
+
+            camposEntrega.forEach(campo => {
+                campo.disabled = recoger;
+                campo.required = !recoger
+                    && campo.dataset.obligatorio === "true";
+            });
+        }
+
+        modalidadEntrega.addEventListener(
+            "change",
+            actualizarModalidadEntrega
+        );
+
+        actualizarModalidadEntrega();
     </script>
 </body>
 
