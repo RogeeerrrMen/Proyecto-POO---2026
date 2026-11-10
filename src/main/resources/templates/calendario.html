@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de pedidos</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/calendario.css}">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">Gestión de Pedidos</a>
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a class="btn btn-secondary" th:href="@{/pedidos}">Ver pedidos</a>
+            <a class="btn btn-secondary" th:href="@{/dashboard}">Volver al inicio</a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container calendario-page">
+        <header class="dashboard-heading">
+            <p class="eyebrow">ORGANIZA TUS PEDIDOS</p>
+            <h1 class="card-title">Calendario de pedidos</h1>
+            <p class="card-subtitle" th:text="${calendario.emprendimiento}"></p>
+        </header>
+
+        <p class="form-error" role="alert" th:if="${error}" th:text="${error}"></p>
+
+        <section class="card" aria-labelledby="mes-title">
+            <div class="calendario-encabezado">
+                <div>
+                    <h2 id="mes-title" th:text="${calendario.titulo}"></h2>
+                    <p class="cliente-ayuda">
+                        <span th:text="${calendario.cantidadEventos}"></span>
+                        eventos programados en este mes.
+                    </p>
+                </div>
+                <nav class="calendario-acciones" aria-label="Cambiar mes">
+                    <a class="btn btn-secondary"
+                       th:if="${calendario.mesAnterior != null}"
+                       th:href="@{/calendario(mes=${calendario.mesAnterior})}">Mes anterior</a>
+                    <a class="btn btn-secondary" th:href="@{/calendario}">Mes actual</a>
+                    <a class="btn btn-secondary"
+                       th:if="${calendario.mesSiguiente != null}"
+                       th:href="@{/calendario(mes=${calendario.mesSiguiente})}">Mes siguiente</a>
+                </nav>
+            </div>
+
+            <form class="calendario-filtro" th:action="@{/calendario}" method="get">
+                <div class="form-group">
+                    <label for="mes">Ir a un mes</label>
+                    <input type="month" id="mes" name="mes" min="0001-01" max="9999-12"
+                           th:value="${calendario.mes}" required>
+                </div>
+                <button class="btn btn-primary" type="submit">Ver mes</button>
+            </form>
+
+            <ul class="calendario-leyenda" aria-label="Tipos de evento">
+                <li class="preparacion">Preparación</li>
+                <li class="envio">Envío</li>
+                <li class="entrega">Entrega o recogida</li>
+            </ul>
+            <p class="cliente-ayuda">Selecciona un evento para abrir el detalle del pedido.</p>
+            <p class="calendario-ayuda-movil">Desliza la tabla para ver todos los días.</p>
+
+            <div class="table-container" role="region" aria-label="Calendario mensual" tabindex="0">
+                <table class="calendario-tabla">
+                    <caption class="visually-hidden" th:text="${calendario.titulo}"></caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Lunes</th><th scope="col">Martes</th>
+                            <th scope="col">Miércoles</th><th scope="col">Jueves</th>
+                            <th scope="col">Viernes</th><th scope="col">Sábado</th>
+                            <th scope="col">Domingo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="semana : ${calendario.semanas}">
+                            <td th:each="dia : ${semana}"
+                                th:classappend="${(dia.delMes ? '' : ' fuera-mes') + (dia.hoy ? ' dia-hoy' : '')}">
+                                <time class="calendario-numero" th:datetime="${dia.fecha}"
+                                      th:text="${#temporals.format(dia.fecha, 'd')}"
+                                      th:attr="aria-current=${dia.hoy ? 'date' : null}"></time>
+                                <ul class="calendario-eventos" th:if="${dia.delMes}">
+                                    <li th:each="evento : ${dia.eventos}">
+                                        <a class="calendario-evento" th:classappend="${evento.tipo}"
+                                           th:href="@{/pedidos/{id}(id=${evento.pedidoId})}"
+                                           th:title="${evento.codigo + ' — ' + evento.cliente}">
+                                            <strong th:text="${evento.etiqueta}"></strong>
+                                            <span th:text="${evento.hora != null
+                                                ? #temporals.format(evento.hora, 'HH:mm') : 'Sin hora'}"></span>
+                                            <span>Pedido #<span th:text="${evento.pedidoId}"></span></span>
+                                            <span class="calendario-cliente" th:text="${evento.cliente}"></span>
+                                            <small th:text="${#strings.replace(evento.estado.name(), '_', ' ')}"></small>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p th:if="${calendario.cantidadEventos == 0}" class="cliente-ayuda">
+                No hay eventos programados para este mes.
+            </p>
+        </section>
+
+        <section class="card" aria-labelledby="proximos-title">
+            <h2 id="proximos-title">Próximos siete días</h2>
+            <p class="cliente-ayuda">
+                Del <span th:text="${#temporals.format(calendario.hoy, 'dd/MM/yyyy')}"></span>
+                al <span th:text="${#temporals.format(calendario.finRecordatorios, 'dd/MM/yyyy')}"></span>.
+                Incluye hoy. Solo se muestran pedidos que siguen activos.
+            </p>
+            <p th:if="${#lists.isEmpty(calendario.recordatorios)}">
+                No hay eventos próximos de pedidos activos.
+            </p>
+            <div class="table-container" th:unless="${#lists.isEmpty(calendario.recordatorios)}">
+                <table class="products-table">
+                    <caption class="visually-hidden">Recordatorios de pedidos próximos</caption>
+                    <thead><tr>
+                        <th scope="col">Fecha</th><th scope="col">Hora</th>
+                        <th scope="col">Actividad</th><th scope="col">Pedido</th>
+                        <th scope="col">Cliente</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr th:each="evento : ${calendario.recordatorios}">
+                            <td th:text="${#temporals.format(evento.fecha, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${evento.hora != null
+                                ? #temporals.format(evento.hora, 'HH:mm') : 'Sin hora'}"></td>
+                            <td><span class="calendario-etiqueta" th:classappend="${evento.tipo}"
+                                      th:text="${evento.etiqueta}"></span></td>
+                            <td><a th:href="@{/pedidos/{id}(id=${evento.pedidoId})}"
+                                   th:text="${'Pedido #' + evento.pedidoId}" th:title="${evento.codigo}"></a></td>
+                            <td th:text="${evento.cliente}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card" aria-labelledby="sin-fecha-title">
+            <h2 id="sin-fecha-title">Pedidos sin programar</h2>
+            <p class="cliente-ayuda">
+                Pedidos del emprendimiento que todavía no tienen fecha de preparación,
+                envío ni entrega. Esta lista no depende del mes seleccionado.
+            </p>
+            <p th:if="${#lists.isEmpty(calendario.sinFecha)}">No hay pedidos sin programar.</p>
+            <div class="table-container" th:unless="${#lists.isEmpty(calendario.sinFecha)}">
+                <table class="products-table">
+                    <caption class="visually-hidden">Pedidos sin ninguna fecha programada</caption>
+                    <thead><tr><th scope="col">Pedido</th><th scope="col">Cliente</th>
+                        <th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
+                    <tbody>
+                        <tr th:each="pedido : ${calendario.sinFecha}">
+                            <td th:text="${'Pedido #' + pedido.id}" th:title="${pedido.codigo}"></td>
+                            <td th:text="${pedido.cliente}"></td>
+                            <td th:text="${#strings.replace(pedido.estado.name(), '_', ' ')}"></td>
+                            <td><a class="btn btn-secondary"
+                                   th:href="@{/pedidos/{id}(id=${pedido.id})}">Ver detalle</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
