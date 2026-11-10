@@ -26,7 +26,7 @@ class PedidoEstadoServiceTest {
     void preparar() {
         pedidoRepository = mock(PedidoRepository.class);
 
-        pedidoService = new PedidoService(pedidoRepository, mock(ClienteRepository.class), mock(ProductoRepository.class));
+        pedidoService = new PedidoService(pedidoRepository, mock(ClienteRepository.class), mock(ProductoRepository.class), mock(EmprendimientoService.class));
 
         Cliente cliente = new Cliente("Ana", "12345678");
 

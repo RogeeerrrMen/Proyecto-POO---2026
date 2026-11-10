@@ -1,7 +1,5 @@
 package edu.uvg.gestionpedidos.service;
 
-import edu.uvg.gestionpedidos.entity.ModalidadEntrega;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -15,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import edu.uvg.gestionpedidos.dto.DetallePedidoDTO;
 import edu.uvg.gestionpedidos.dto.PedidoDTO;
 import edu.uvg.gestionpedidos.entity.Cliente;
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
+import edu.uvg.gestionpedidos.entity.ModalidadEntrega;
 import edu.uvg.gestionpedidos.entity.DireccionEntrega;
 import edu.uvg.gestionpedidos.entity.Pedido;
 import edu.uvg.gestionpedidos.entity.Producto;
@@ -29,29 +29,39 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoRepository productoRepository;
+    private final EmprendimientoService emprendimientoService;
 
-    public PedidoService(PedidoRepository pedidoRepository, ClienteRepository clienteRepository, ProductoRepository productoRepository) {
+    public PedidoService(
+            PedidoRepository pedidoRepository,
+            ClienteRepository clienteRepository,
+            ProductoRepository productoRepository,
+            EmprendimientoService emprendimientoService) {
 
         this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.productoRepository = productoRepository;
+        this.emprendimientoService = emprendimientoService;
     }
 
     @Transactional
-    public Pedido registrar(PedidoDTO datos) {
+    public Pedido registrar(PedidoDTO datos, String correoAutenticado) {
         validarFormulario(datos);
 
-        Cliente cliente = clienteRepository.findById(datos.getClienteId()).orElseThrow(() -> new IllegalArgumentException("El cliente seleccionado no existe."));
+        Emprendimiento emprendimiento = emprendimientoService
+                .buscarMiEmprendimiento(correoAutenticado)
+                .orElseThrow(() -> new IllegalArgumentException("Debes registrar tu emprendimiento antes de crear pedidos."));
+
+        Cliente cliente = clienteRepository.findById(datos.getClienteId()).orElseThrow(() -> new IllegalArgumentException("El cliente no existe."));
 
         DireccionEntrega direccion = null;
 
-            if (datos.getModalidadEntrega() == ModalidadEntrega.ENVIO_DOMICILIO) {
-                direccion = crearDireccion(datos);
-            }
+        if (datos.getModalidadEntrega() == ModalidadEntrega.ENVIO_DOMICILIO) {
+            direccion = crearDireccion(datos);
+        }
 
         String codigo = "PED-" + UUID.randomUUID();
 
-        Pedido pedido = new Pedido(codigo, cliente, direccion, datos.getModalidadEntrega());
+        Pedido pedido = new Pedido(codigo, cliente, direccion, datos.getModalidadEntrega(), emprendimiento);
 
         pedido.setFechaPreparacion(datos.getFechaPreparacion());
         pedido.setHoraPreparacion(datos.getHoraPreparacion());
@@ -89,9 +99,15 @@ public class PedidoService {
     public Pedido obtenerPorId(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("El identificador del pedido es inválido.");
-        }
+    }
 
-        return pedidoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("El pedido no existe."));
+    Pedido pedido = pedidoRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("El pedido no existe."));
+
+    // Carga la secuencia mientras la transacción está abierta.
+    pedido.getFlujoEstados();
+
+    return pedido;
     }
 
     @Transactional
@@ -102,6 +118,7 @@ public class PedidoService {
 
         Pedido pedido = obtenerPorId(id);
 
+        //Estados válidos para actualizar
         switch (nuevoEstado) {
             case CONFIRMADO -> pedido.confirmar();
             case EN_PREPARACION -> pedido.iniciarPreparacion();
