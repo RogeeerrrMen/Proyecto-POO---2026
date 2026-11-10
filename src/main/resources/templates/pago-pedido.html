@@ -1,11 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Gestión de pagos</title>
 
@@ -13,100 +11,204 @@
 </head>
 
 <body>
-
-<header class="navbar">
-    <a class="logo" th:href="@{/dashboard}">
-        Gestión de Pedidos
-    </a>
-
-    <nav class="nav-links">
-        <a class="btn btn-secondary" th:href="@{/pedidos}">
-            Volver a pedidos
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
         </a>
-    </nav>
-</header>
 
-<main class="main-container">
+        <nav class="nav-links">
+            <a class="btn btn-secondary"
+               th:href="@{/pedidos/{id}(id=${pedidoId})}">
+                Volver al pedido
+            </a>
+        </nav>
+    </header>
 
-    <section class="card">
+    <main class="dashboard-container">
+        <section class="card">
+            <h1 class="card-title">Gestión de pagos</h1>
 
-        <h1 class="card-title">Gestión de pagos</h1>
+            <p class="card-subtitle">
+                Registra los abonos y consulta el historial del pedido.
+            </p>
 
-        <p class="card-subtitle">
-            Información financiera del pedido.
-        </p>
+            <p th:if="${mensaje}"
+               th:text="${mensaje}"
+               class="form-success"
+               role="status"></p>
 
-        <div th:if="${mensaje}" class="form-success"
-             role="status">
-            <p th:text="${mensaje}"></p>
-        </div>
+            <p th:if="${error}"
+               th:text="${error}"
+               class="form-error"
+               role="alert"></p>
 
-        <div th:if="${error}" class="form-error"
-             role="alert">
-            <p th:text="${error}"></p>
-        </div>
+            <h2>Resumen del pedido</h2>
 
-        <h2>Resumen del pedido</h2>
+            <dl>
+                <dt>Pedido</dt>
+                <dd th:text="${pedidoId}"></dd>
 
-        <p>
-            <strong>Pedido:</strong>
-            <span th:text="${pedidoId}"></span>
-        </p>
+                <dt>Total</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(
+                        totalPedido, 1, 2)}"></span>
+                </dd>
 
-        <p>
-            <strong>Total:</strong>
-            Q<span th:text="${totalPedido}"></span>
-        </p>
+                <dt>Total abonado</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(
+                        totalAbonado, 1, 2)}"></span>
+                </dd>
 
-        <p>
-            <strong>Total abonado:</strong>
-            Q<span th:text="${totalAbonado}"></span>
-        </p>
+                <dt>Saldo pendiente</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(
+                        saldoPendiente, 1, 2)}"></span>
+                </dd>
 
-        <p>
-            <strong>Saldo pendiente:</strong>
-            Q<span th:text="${saldoPendiente}"></span>
-        </p>
+                <dt>Estado del pago</dt>
+                <dd th:text="${estadoPago}"></dd>
+            </dl>
+        </section>
 
-        <p>
-            <strong>Estado del pago:</strong>
-            <span th:text="${estadoPago}"></span>
-        </p>
+        <section class="card"
+                 th:if="${saldoPendiente.signum() > 0}">
 
-        <hr>
+            <h2>Registrar abono</h2>
 
-        <h2>Registrar abono</h2>
+            <form th:action="@{/pedidos/{id}/pago/abonar(id=${pedidoId})}"
+                  method="post">
 
-        <form th:if="${saldoPendiente.signum() > 0}"
-              th:action="@{/pedidos/{id}/pago/abonar(id=${pedidoId})}"
-              method="post">
+                <div class="form-group">
+                    <label for="monto">Monto del abono (Q)</label>
 
-            <div class="form-group">
-                <label for="monto">Monto del abono (Q)</label>
+                    <input type="number"
+                           id="monto"
+                           name="monto"
+                           th:value="${montoIngresado}"
+                           th:attr="max=${saldoPendiente}"
+                           min="0.01"
+                           step="0.01"
+                           placeholder="0.00"
+                           required>
+                </div>
 
-                <input
-                    type="number"
-                    id="monto"
-                    name="monto"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="0.00"
-                    required>
+                <div class="form-group">
+                    <label for="metodoPago">Método de pago</label>
+
+                    <select id="metodoPago"
+                            name="metodoPago"
+                            required>
+
+                        <option value=""
+                                th:selected="${metodoPagoSeleccionado == null
+                                    or metodoPagoSeleccionado == ''}">
+                            Selecciona un método
+                        </option>
+
+                        <option th:each="metodo : ${metodosPago}"
+                                th:value="${metodo.name()}"
+                                th:text="${metodo.descripcion}"
+                                th:selected="${metodo.name()
+                                    == metodoPagoSeleccionado}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="referencia">
+                        Referencia o comprobante (opcional)
+                    </label>
+
+                    <input type="text"
+                           id="referencia"
+                           name="referencia"
+                           th:value="${referenciaIngresada}"
+                           maxlength="255"
+                           placeholder="Número de operación o referencia">
+
+                    <small class="cliente-ayuda">
+                        Ingresa únicamente la referencia de la operación.
+                        No incluyas números completos de tarjeta ni códigos
+                        de seguridad.
+                    </small>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Registrar abono
+                </button>
+            </form>
+        </section>
+
+        <section class="card"
+                 th:if="${saldoPendiente.signum() == 0}">
+            <p role="status">
+                Este pedido ya está completamente pagado.
+            </p>
+        </section>
+
+        <section class="card">
+            <h2>Historial de abonos</h2>
+
+            <p>
+                Los movimientos más recientes aparecen primero.
+            </p>
+
+            <div th:if="${montoSinDetalle.signum() > 0}">
+                <p>
+                    <strong>Abonado anteriormente sin desglose:</strong>
+                    Q<span th:text="${#numbers.formatDecimal(
+                        montoSinDetalle, 1, 2)}"></span>
+                </p>
+
+                <p class="cliente-ayuda">
+                    Este monto ya forma parte del total abonado.
+                    No se dispone de su fecha ni método de pago.
+                </p>
             </div>
 
-            <button type="submit" class="btn btn-primary">
-                Registrar abono
-            </button>
+            <p th:if="${#lists.isEmpty(historialAbonos)}">
+                Todavía no hay movimientos con detalle registrado.
+            </p>
 
-        </form>
+            <div class="table-container"
+                 th:unless="${#lists.isEmpty(historialAbonos)}">
 
-        <p th:if="${saldoPendiente.signum() == 0}">
-            Este pedido ya está completamente pagado.
-        </p>
+                <table class="products-table">
+                    <caption>Movimientos de pago del pedido</caption>
 
-    </section>
+                    <thead>
+                        <tr>
+                            <th scope="col">Fecha y hora</th>
+                            <th scope="col">Método de pago</th>
+                            <th scope="col">Referencia</th>
+                            <th scope="col">Monto</th>
+                        </tr>
+                    </thead>
 
-</main>
+                    <tbody>
+                        <tr th:each="abono : ${historialAbonos}">
+                            <td th:text="${#temporals.format(
+                                abono.fecha, 'dd/MM/yyyy HH:mm')}">
+                            </td>
 
+                            <td th:text="${abono.metodoPago.descripcion}">
+                            </td>
+
+                            <td th:text="${abono.referencia
+                                ?: 'Sin referencia'}">
+                            </td>
+
+                            <td>
+                                Q<span th:text="${#numbers.formatDecimal(
+                                    abono.monto, 1, 2)}"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
 </body>
+
 </html>
