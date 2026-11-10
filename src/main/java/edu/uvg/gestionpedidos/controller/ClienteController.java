@@ -2,9 +2,15 @@ package edu.uvg.gestionpedidos.controller;
 
 import edu.uvg.gestionpedidos.entity.Cliente;
 import edu.uvg.gestionpedidos.service.ClienteService;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/clientes")
@@ -29,27 +35,25 @@ public class ClienteController {
 
     @GetMapping("/nuevo")
     public String mostrarFormularioRegistro(Model model) {
-        model.addAttribute("cliente", new Cliente());
-        model.addAttribute("titulo", "Registrar cliente");
-        model.addAttribute("accion", "/clientes");
+        prepararFormulario(model, new Cliente(), "Registrar cliente", "/clientes");
 
         return "formulario-cliente";
     }
 
     @PostMapping
-    public String registrar(
-            @RequestParam String nombre,
-            @RequestParam String telefono,
-            Model model) {
+    public String registrar(@RequestParam String nombre, @RequestParam String telefono, @RequestParam(required = false) String nit,
+            @RequestParam(required = false) String razonSocial, Model model) {
 
         try {
-            clienteService.registrar(nombre, telefono);
+            clienteService.registrar(nombre, telefono, nit, razonSocial);
+
             return "redirect:/clientes";
 
         } catch (IllegalArgumentException e) {
-            model.addAttribute("cliente", new Cliente(nombre, telefono));
-            model.addAttribute("titulo", "Registrar cliente");
-            model.addAttribute("accion", "/clientes");
+            Cliente cliente = crearClienteFormulario(nombre, telefono, nit, razonSocial);
+
+            prepararFormulario(model, cliente, "Registrar cliente", "/clientes");
+
             model.addAttribute("error", e.getMessage());
 
             return "formulario-cliente";
@@ -57,35 +61,46 @@ public class ClienteController {
     }
 
     @GetMapping("/{id}/editar")
-    public String mostrarFormularioEdicion(
-            @PathVariable Long id,
-            Model model) {
+    public String mostrarFormularioEdicion(@PathVariable Long id, Model model) {
 
-        model.addAttribute("cliente", clienteService.obtenerPorId(id));
-        model.addAttribute("titulo", "Editar cliente");
-        model.addAttribute("accion", "/clientes/" + id);
+        prepararFormulario(model, clienteService.obtenerPorId(id), "Editar cliente", "/clientes/" + id);
 
         return "formulario-cliente";
     }
 
     @PostMapping("/{id}")
-    public String modificar(
-            @PathVariable Long id,
-            @RequestParam String nombre,
-            @RequestParam String telefono,
-            Model model) {
+    public String modificar(@PathVariable Long id, @RequestParam String nombre, @RequestParam String telefono,
+            @RequestParam(required = false) String nit, @RequestParam(required = false) String razonSocial, Model model) {
 
         try {
-            clienteService.modificar(id, nombre, telefono);
+            clienteService.modificar(id, nombre, telefono, nit, razonSocial);
+
             return "redirect:/clientes";
 
         } catch (IllegalArgumentException e) {
-            model.addAttribute("cliente", new Cliente(nombre, telefono));
-            model.addAttribute("titulo", "Editar cliente");
-            model.addAttribute("accion", "/clientes/" + id);
+            Cliente cliente = crearClienteFormulario(nombre, telefono, nit, razonSocial);
+
+            prepararFormulario(model, cliente, "Editar cliente", "/clientes/" + id);
+
             model.addAttribute("error", e.getMessage());
 
             return "formulario-cliente";
         }
+    }
+
+    private Cliente crearClienteFormulario(String nombre, String telefono, String nit, String razonSocial) {
+
+        Cliente cliente = new Cliente(nombre, telefono);
+        cliente.setNit(nit);
+        cliente.setRazonSocial(razonSocial);
+
+        return cliente;
+    }
+
+    private void prepararFormulario(Model model, Cliente cliente, String titulo, String accion) {
+
+        model.addAttribute("cliente", cliente);
+        model.addAttribute("titulo", titulo);
+        model.addAttribute("accion", accion);
     }
 }
