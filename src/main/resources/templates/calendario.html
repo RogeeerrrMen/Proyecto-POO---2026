@@ -31,7 +31,7 @@
                     <h2 id="mes-title" th:text="${calendario.titulo}"></h2>
                     <p class="cliente-ayuda">
                         <span th:text="${calendario.cantidadEventos}"></span>
-                        eventos programados en este mes.
+                        eventos programados para este mes.
                     </p>
                 </div>
                 <nav class="calendario-acciones" aria-label="Cambiar mes">
@@ -59,7 +59,7 @@
                 <li class="envio">Envío</li>
                 <li class="entrega">Entrega o recogida</li>
             </ul>
-            <p class="cliente-ayuda">Selecciona un evento para abrir el detalle del pedido.</p>
+            <p class="cliente-ayuda">Selecciona un día para abrir la información del pedido.</p>
             <p class="calendario-ayuda-movil">Desliza la tabla para ver todos los días.</p>
 
             <div class="table-container" role="region" aria-label="Calendario mensual" tabindex="0">
@@ -105,14 +105,14 @@
         </section>
 
         <section class="card" aria-labelledby="proximos-title">
-            <h2 id="proximos-title">Próximos siete días</h2>
+            <h2 id="proximos-title">Pedidos para los próximos siete días</h2>
             <p class="cliente-ayuda">
                 Del <span th:text="${#temporals.format(calendario.hoy, 'dd/MM/yyyy')}"></span>
                 al <span th:text="${#temporals.format(calendario.finRecordatorios, 'dd/MM/yyyy')}"></span>.
-                Incluye hoy. Solo se muestran pedidos que siguen activos.
+                Se incluye hoy. Solo se muestran pedidos que siguen activos.
             </p>
             <p th:if="${#lists.isEmpty(calendario.recordatorios)}">
-                No hay eventos próximos de pedidos activos.
+                No hay entregas próximas de pedidos activos.
             </p>
             <div class="table-container" th:unless="${#lists.isEmpty(calendario.recordatorios)}">
                 <table class="products-table">

@@ -1,0 +1,15 @@
+.pagos-page .card { max-width: none; margin-bottom: 24px; padding: 28px; }
+.pagos-page details { border-top: 1px solid var(--border-color); padding: 18px 0; }
+.pagos-page summary { color: var(--primary-color); font-weight: 600; cursor: pointer; }
+.pagos-page details form { margin-top: 18px; }
+.pagos-page .form-group { max-width: 600px; }
+.pagos-page .pagos-acciones { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.pagos-page .products-table input { min-width: 130px; width: 100%; padding: 10px;
+    border: 1px solid var(--border-color); border-radius: 6px; font: inherit; }
+.pagos-page dl { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; gap: 12px; }
+.pagos-page dd { margin: 0; }
+@media (max-width: 600px) {
+    .pagos-page .card { padding: 18px; }
+    .pagos-page dl { grid-template-columns: 1fr; gap: 6px; }
+    .pagos-page dd { margin-bottom: 10px; }
+}

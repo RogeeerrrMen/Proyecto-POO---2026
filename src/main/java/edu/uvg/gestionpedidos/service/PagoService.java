@@ -4,6 +4,12 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import edu.uvg.gestionpedidos.dto.ResumenPagoDTO;
+import edu.uvg.gestionpedidos.dto.AbonoHistorialDTO;
+import edu.uvg.gestionpedidos.entity.PlanPago;
+import edu.uvg.gestionpedidos.entity.PartePago;
+import edu.uvg.gestionpedidos.repository.PlanPagoRepository;
+import org.springframework.security.access.AccessDeniedException;
+import java.util.NoSuchElementException;
 import edu.uvg.gestionpedidos.entity.Abono;
 import edu.uvg.gestionpedidos.entity.EstadoPago;
 import edu.uvg.gestionpedidos.entity.MetodoPago;
@@ -22,12 +28,17 @@ public class PagoService {
     private final PagoRepository pagoRepository;
     private final PedidoRepository pedidoRepository;
     private final AbonoRepository abonoRepository;
+    private final PlanPagoRepository planPagoRepository;
+    private final EmprendimientoService emprendimientoService;
 
-    public PagoService(PagoRepository pagoRepository, PedidoRepository pedidoRepository, AbonoRepository abonoRepository) {
+    public PagoService(PagoRepository pagoRepository, PedidoRepository pedidoRepository, AbonoRepository abonoRepository,
+        PlanPagoRepository planPagoRepository, EmprendimientoService emprendimientoService) {
 
         this.pagoRepository = pagoRepository;
         this.pedidoRepository = pedidoRepository;
         this.abonoRepository = abonoRepository;
+        this.planPagoRepository = planPagoRepository;
+        this.emprendimientoService = emprendimientoService;
     }
 
     @Transactional
@@ -38,29 +49,68 @@ public class PagoService {
     }
 
     public Pago registrarAbono(Long pedidoId, BigDecimal monto) {
-        throw new IllegalArgumentException("Debes escoger un método de pago.");
+        throw new IllegalArgumentException("tienes escoger un método de pago.");
     }
 
     @Transactional
-    public Pago registrarAbono(Long pedidoId, BigDecimal monto, MetodoPago metodoPago, String referencia) {
+    public Pago registrarAbono(Long pedidoId, BigDecimal monto,
+            MetodoPago metodoPago, String referencia) {
+        return aplicarAbono(pedidoId, monto, metodoPago, referencia, null);
+    }
 
+    @Transactional
+    public Pago registrarAbono(Long pedidoId, BigDecimal monto, MetodoPago metodoPago,
+            String referencia, Long parteId, String correo) {
+        // El bloqueo y la comprobación de acceso están en la misma transacción.
         Pedido pedido = bloquearPedido(pedidoId);
+        verificarPropietario(pedido, correo);
+        return aplicarAbonoBloqueado(pedido, monto, metodoPago, referencia, parteId);
+    }
 
+    private Pago aplicarAbono(Long pedidoId, BigDecimal monto,
+            MetodoPago metodoPago, String referencia, Long parteId) {
+        return aplicarAbonoBloqueado(bloquearPedido(pedidoId), monto, metodoPago, referencia, parteId);
+    }
+
+    private Pago aplicarAbonoBloqueado(Pedido pedido, BigDecimal monto,
+            MetodoPago metodoPago, String referencia, Long parteId) {
         Pago pago = obtenerOCrearPagoBloqueado(pedido);
-
-        Abono abono = new Abono(pago, monto, metodoPago, referencia);
-
-        // Comprueba el saldo y actualiza el total abonado.
+        PlanPago plan = planPagoRepository.findByPago_Id(pago.getId()).orElse(null);
+        PartePago parte = null;
+        if (plan != null) {
+            parte = plan.buscarParte(parteId);
+        } else if (parteId != null) {
+            throw new IllegalArgumentException("Este pedido no tiene un plan de pagos.");
+        }
+        Abono abono = new Abono(pago, monto, metodoPago, referencia, parte);
+        if (parte != null) { parte.validarAbono(abono.getMonto()); }
         pago.registrarAbono(abono.getMonto());
-
-        // El historial y el total se guardan en la misma transacción.
+        if (parte != null) { parte.registrarAbono(abono.getMonto()); }
         abonoRepository.save(abono);
-
         return pagoRepository.save(pago);
     }
 
     @Transactional(readOnly = true)
-    public List<Abono> consultarHistorial(Long pedidoId) {
+    public void verificarAcceso(Long pedidoId, String correo) {
+        validarPedidoId(pedidoId);
+        Pedido pedido = pedidoRepository.findById(pedidoId).orElseThrow(
+                () -> new IllegalArgumentException("El pedido no existe."));
+        verificarPropietario(pedido, correo);
+    }
+
+    private void verificarPropietario(Pedido pedido, String correo) {
+        if (pedido.getEmprendimiento() == null) {
+            throw new AccessDeniedException("El pedido no está disponible para tu cuenta.");
+        }
+        try {
+            emprendimientoService.consultarEmprendimiento(pedido.getEmprendimiento().getId(), correo);
+        } catch (NoSuchElementException e) {
+            throw new AccessDeniedException("El pedido no está disponible para tu cuenta.");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<AbonoHistorialDTO> consultarHistorial(Long pedidoId) {
         validarPedidoId(pedidoId);
 
         if (!pedidoRepository.existsById(pedidoId)) {
@@ -68,7 +118,8 @@ public class PagoService {
         }
 
         return abonoRepository
-                .findByPago_Pedido_IdOrderByFechaDescIdDesc(pedidoId);
+                .findByPago_Pedido_IdOrderByFechaDescIdDesc(pedidoId)
+                .stream().map(AbonoHistorialDTO::new).toList();
     }
 
     @Transactional(readOnly = true)

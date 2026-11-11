@@ -8,6 +8,7 @@
     <title>Gestión de pagos</title>
 
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/pagos.css}">
 </head>
 
 <body>
@@ -24,7 +25,7 @@
         </nav>
     </header>
 
-    <main class="dashboard-container">
+    <main class="dashboard-container pagos-page">
         <section class="card">
             <h1 class="card-title">Gestión de pagos</h1>
 
@@ -71,6 +72,84 @@
             </dl>
         </section>
 
+        <section class="card" th:if="${planPago != null}" aria-labelledby="plan-title">
+            <h2 id="plan-title" th:text="${planPago.tipo.descripcion}"></h2>
+            <p>Saldo distribuido al crear el plan:
+                Q<span th:text="${#numbers.formatDecimal(planPago.saldoInicial, 1, 2)}"></span>.
+                Los abonos anteriores se conservan por separado.
+            </p>
+            <div class="table-container">
+                <table class="products-table">
+                    <caption>Distribución del saldo y avance de los pagos</caption>
+                    <thead><tr>
+                        <th scope="col">Cuota o persona</th><th scope="col">Vencimiento</th>
+                        <th scope="col">Asignado</th><th scope="col">Abonado</th>
+                        <th scope="col">Pendiente</th><th scope="col">Estado</th>
+                    </tr></thead>
+                    <tbody><tr th:each="parte : ${planPago.partes}">
+                        <td th:text="${parte.etiqueta}"></td>
+                        <td th:text="${parte.fechaVencimiento != null
+                            ? #temporals.format(parte.fechaVencimiento, 'dd/MM/yyyy') : 'Sin vencimiento'}"></td>
+                        <td>Q<span th:text="${#numbers.formatDecimal(parte.monto, 1, 2)}"></span></td>
+                        <td>Q<span th:text="${#numbers.formatDecimal(parte.totalAbonado, 1, 2)}"></span></td>
+                        <td>Q<span th:text="${#numbers.formatDecimal(parte.saldoPendiente, 1, 2)}"></span></td>
+                        <td th:text="${parte.estado}"></td>
+                    </tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card" th:if="${planPago == null and saldoPendiente.signum() > 0}"
+                 aria-labelledby="organizar-title">
+            <h2 id="organizar-title">Organizar el saldo pendiente</h2>
+            <p>Puedes continuar con abonos libres o dividir el cobro en cuotas o entre personas.
+                Crear un plan no registra dinero cobrado. Al guardarlo, la distribución no puede ser cambiada.
+            </p>
+            <details th:open="${cantidadCuotasIngresada != null}">
+                <summary>Crear cuotas mensuales</summary>
+                <form th:action="@{/pedidos/{id}/pago/plan/cuotas(id=${pedidoId})}" method="post">
+                    <div class="form-group">
+                        <label for="cantidadCuotas">Cantidad de cuotas</label>
+                        <input type="number" id="cantidadCuotas" name="cantidadCuotas"
+                               th:value="${cantidadCuotasIngresada}" min="2" max="60" step="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="primerVencimiento">Vencimiento de la primera cuota</label>
+                        <input type="date" id="primerVencimiento" name="primerVencimiento"
+                               th:value="${primerVencimientoIngresado}" min="0001-01-01" max="9999-12-31" required>
+                    </div>
+                    <p class="cliente-ayuda">Se reparte el saldo pendiente en cuotas mensuales.
+                        Los centavos sobrantes se reparten entre las últimas cuotas.</p>
+                    <button type="submit" class="btn btn-secondary">Guardar plan de cuotas</button>
+                </form>
+            </details>
+            <details th:open="${personasIngresadas != null}">
+                <summary>Dividir entre personas</summary>
+                <form id="formulario-dividido" th:attr="data-saldo=${saldoPendiente}"
+                      th:action="@{/pedidos/{id}/pago/plan/dividido(id=${pedidoId})}" method="post">
+                    <div class="table-container">
+                        <table class="products-table">
+                            <caption>Personas e importes a pagar</caption>
+                            <thead><tr><th scope="col">Persona</th><th scope="col">Importe (Q)</th>
+                                <th scope="col">Acción</th></tr></thead>
+                            <tbody id="personas-plan"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagos-acciones">
+                        <button type="button" id="agregar-persona" class="btn btn-secondary">Agregar persona</button>
+                        <button type="button" id="repartir-igual" class="btn btn-secondary">Repartir por igual</button>
+                    </div>
+                    <p id="suma-personas" role="status" aria-live="polite"></p>
+                    <p class="cliente-ayuda">La suma tiene que coincidir con el saldo pendiente.
+                        Usa nombres distintos. Puedes añadir un apellido.</p>
+                    <button type="submit" id="guardar-dividido" class="btn btn-secondary" disabled>
+                        Guardar distribución
+                    </button>
+                    <noscript><p>Activa JavaScript para agregar personas y distribuir los importes.</p></noscript>
+                </form>
+            </details>
+        </section>
+
         <section class="card"
                  th:if="${saldoPendiente.signum() > 0}">
 
@@ -78,6 +157,19 @@
 
             <form th:action="@{/pedidos/{id}/pago/abonar(id=${pedidoId})}"
                   method="post">
+                <div class="form-group" th:if="${planPago != null}">
+                    <label for="partePagoId">Aplicar abono a</label>
+                    <select id="partePagoId" name="partePagoId" required>
+                        <option value="">Selecciona una cuota o persona</option>
+                        <option th:each="parte : ${planPago.partes}"
+                                th:value="${parte.id}"
+                                th:attr="data-saldo=${parte.saldoPendiente}"
+                                th:disabled="${parte.saldoPendiente.signum() == 0}"
+                                th:selected="${parte.id.toString() == partePagoSeleccionada}"
+                                th:text="${parte.etiqueta + ' — pendiente Q' + parte.saldoPendiente}"></option>
+                    </select>
+                </div>
+
 
                 <div class="form-group">
                     <label for="monto">Monto del abono (Q)</label>
@@ -182,6 +274,7 @@
                             <th scope="col">Fecha y hora</th>
                             <th scope="col">Método de pago</th>
                             <th scope="col">Referencia</th>
+                            <th scope="col">Aplicado a</th>
                             <th scope="col">Monto</th>
                         </tr>
                     </thead>
@@ -199,6 +292,7 @@
                                 ?: 'Sin referencia'}">
                             </td>
 
+                            <td th:text="${abono.destino}"></td>
                             <td>
                                 Q<span th:text="${#numbers.formatDecimal(
                                     abono.monto, 1, 2)}"></span>
@@ -209,6 +303,112 @@
             </div>
         </section>
     </main>
+    <template id="fila-persona-plan">
+        <tr>
+            <td><input type="text" name="personas" maxlength="120" required data-persona></td>
+            <td><input type="number" name="montos" min="0.01" step="0.01" required data-monto></td>
+            <td><button type="button" class="btn btn-secondary" data-quitar-persona>Quitar</button></td>
+        </tr>
+    </template>
+
+    <script th:inline="javascript">
+        const nombresPrevios = /*[[${personasIngresadas}]]*/ null;
+        const montosPrevios = /*[[${montosAsignados}]]*/ null;
+        const formularioDividido = document.getElementById("formulario-dividido");
+
+        function centavos(texto) {
+            const partes = /^([0-9]+)(?:\.([0-9]{1,2}))?$/.exec(String(texto));
+            if (!partes) { return null; }
+            return BigInt(partes[1]) * 100n + BigInt((partes[2] || "").padEnd(2, "0"));
+        }
+
+        function importeDecimal(valor) {
+            return `${valor / 100n}.${(valor % 100n).toString().padStart(2, "0")}`;
+        }
+
+        function importeVisible(valor) {
+            return new Intl.NumberFormat("es-GT", {
+                minimumFractionDigits: 2, maximumFractionDigits: 2
+            }).format(Number(valor) / 100);
+        }
+
+        if (formularioDividido) {
+            const cuerpo = document.getElementById("personas-plan");
+            const plantilla = document.getElementById("fila-persona-plan");
+            const agregar = document.getElementById("agregar-persona");
+            const guardar = document.getElementById("guardar-dividido");
+            const objetivo = centavos(formularioDividido.dataset.saldo);
+
+            function agregarFila(nombre = "", monto = "") {
+                const fragmento = plantilla.content.cloneNode(true);
+                fragmento.querySelector("[data-persona]").value = nombre;
+                fragmento.querySelector("[data-monto]").value = monto;
+                cuerpo.appendChild(fragmento);
+            }
+
+            function actualizarDistribucion() {
+                const filas = [...cuerpo.querySelectorAll("tr")];
+                let suma = 0n;
+                let validos = true;
+                const nombres = new Set();
+                filas.forEach((fila, indice) => {
+                    const persona = fila.querySelector("[data-persona]");
+                    const monto = fila.querySelector("[data-monto]");
+                    persona.setAttribute("aria-label", `Nombre de persona ${indice + 1}`);
+                    monto.setAttribute("aria-label", `Importe de persona ${indice + 1}`);
+                    const nombre = persona.value.trim().toLowerCase();
+                    if (!nombre || nombres.has(nombre)) { validos = false; }
+                    nombres.add(nombre);
+                    const valor = centavos(monto.value);
+                    if (valor === null || valor <= 0n || !monto.validity.valid) { validos = false; }
+                    else { suma += valor; }
+                    fila.querySelector("[data-quitar-persona]").disabled = filas.length <= 2;
+                });
+                agregar.disabled = filas.length >= 60;
+                guardar.disabled = !validos || filas.length < 2 || suma !== objetivo;
+                document.getElementById("suma-personas").textContent =
+                    `Asignado: Q${importeVisible(suma)}. Saldo a distribuir: Q${importeVisible(objetivo)}.`;
+            }
+
+            const cantidad = Math.min(60, Math.max(2,
+                nombresPrevios?.length || 0, montosPrevios?.length || 0));
+            for (let i = 0; i < cantidad; i++) {
+                agregarFila(nombresPrevios?.[i] || "", montosPrevios?.[i] || "");
+            }
+            agregar.addEventListener("click", () => {
+                if (cuerpo.children.length < 60) { agregarFila(); actualizarDistribucion(); }
+            });
+            cuerpo.addEventListener("input", actualizarDistribucion);
+            cuerpo.addEventListener("click", evento => {
+                const boton = evento.target.closest("[data-quitar-persona]");
+                if (boton && cuerpo.children.length > 2) {
+                    boton.closest("tr").remove(); actualizarDistribucion();
+                }
+            });
+            document.getElementById("repartir-igual").addEventListener("click", () => {
+                const filas = [...cuerpo.querySelectorAll("tr")];
+                const cuota = objetivo / BigInt(filas.length);
+                const restantes = Number(objetivo % BigInt(filas.length));
+                filas.forEach((fila, indice) => {
+                    const valor = indice >= filas.length - restantes ? cuota + 1n : cuota;
+                    fila.querySelector("[data-monto]").value = importeDecimal(valor);
+                });
+                actualizarDistribucion();
+            });
+            actualizarDistribucion();
+        }
+
+        const selectorParte = document.getElementById("partePagoId");
+        if (selectorParte) {
+            const monto = document.getElementById("monto");
+            const maximoPedido = monto.max;
+            function actualizarMaximoAbono() {
+                monto.max = selectorParte.selectedOptions[0]?.dataset.saldo || maximoPedido;
+            }
+            selectorParte.addEventListener("change", actualizarMaximoAbono);
+            actualizarMaximoAbono();
+        }
+    </script>
 </body>
 
 </html>

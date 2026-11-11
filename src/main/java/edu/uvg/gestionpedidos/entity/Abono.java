@@ -28,6 +28,10 @@ public class Abono {
     @JoinColumn(name = "pago_id", nullable = false)
     private Pago pago;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parte_pago_id")
+    private PartePago partePago;
+
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal monto;
 
@@ -45,6 +49,10 @@ public class Abono {
     }
 
     public Abono(Pago pago, BigDecimal monto, MetodoPago metodoPago, String referencia) {
+        this(pago, monto, metodoPago, referencia, null);
+    }
+
+    public Abono(Pago pago, BigDecimal monto, MetodoPago metodoPago, String referencia, PartePago partePago) {
 
         if (pago == null) {
             throw new IllegalArgumentException("El pago del pedido es obligatorio.");
@@ -81,11 +89,24 @@ public class Abono {
             throw new IllegalArgumentException("La referencia no puede superar los 255 caracteres.");
         }
 
+        if (partePago != null) {
+            Pago pagoParte = partePago.getPlan().getPago();
+            boolean mismoPago = pagoParte == pago || (pago.getId() != null
+                    && pago.getId().equals(pagoParte.getId()));
+            if (!mismoPago) {
+                throw new IllegalArgumentException("La cuota o persona no corresponde al pago.");
+            }
+        }
+        this.partePago = partePago;
         this.pago = pago;
         this.monto = montoValidado;
         this.metodoPago = metodoPago;
         this.referencia = referenciaLimpia;
         this.fecha = LocalDateTime.now();
+    }
+
+    public PartePago getPartePago() { 
+        return partePago; 
     }
 
     public Long getId() {
