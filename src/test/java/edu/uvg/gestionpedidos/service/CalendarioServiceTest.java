@@ -16,6 +16,7 @@ import edu.uvg.gestionpedidos.entity.EstadoPedido;
 import edu.uvg.gestionpedidos.entity.ModalidadEntrega;
 import edu.uvg.gestionpedidos.repository.CalendarioRepository;
 import edu.uvg.gestionpedidos.repository.PedidoCalendarioVista;
+import edu.uvg.gestionpedidos.repository.PedidoCalendarioVista;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -167,18 +168,42 @@ class CalendarioServiceTest {
         assertEquals(EstadoPedido.ENTREGADO, dia.getEventos().get(0).getEstado());
     }
 
-    @Test
-    void listarPedidosSinFechaYNoCrearEventosParaEllos() {
-        when(repository.buscarSinFechas(42L))
-                .thenReturn(List.of(pedido(9L, EstadoPedido.REGISTRADO)));
-        CalendarioDTO calendario = service.consultar("ana@example.com", "2026-11");
-        assertEquals(0, calendario.getCantidadEventos());
-        assertEquals(9L, calendario.getSinFecha().get(0).getId());
-        assertThrows(UnsupportedOperationException.class, calendario.getSinFecha()::clear);
-    }
+    
+    
+@Test
+void listarPedidosSinFechaYNoCrearEventosParaEllos() {
+
+    PedidoCalendarioVista pedidoSinFecha = pedido(
+        9L,
+        EstadoPedido.REGISTRADO
+    );
+
+    when(repository.buscarSinFechas(42L))
+            .thenReturn(List.of(pedidoSinFecha));
+
+    CalendarioDTO calendario = service.consultar(
+        "ana@example.com",
+        "2026-11"
+    );
+
+    assertEquals(0, calendario.getCantidadEventos());
+
+    assertEquals(
+        9L,
+        calendario.getSinFecha().get(0).getId()
+    );
+
+    assertThrows(
+        UnsupportedOperationException.class,
+        calendario.getSinFecha()::clear
+    );
+}
+
+
 
     @Test
     void rechazarMesInvalidoSinConsultarPedidos() {
+
         for (String mes : List.of("2026-13", "2026-00", "0000-01", "2026-1", "texto")) {
             assertThrows(IllegalArgumentException.class,
                     () -> service.consultar("ana@example.com", mes));

@@ -45,14 +45,31 @@ class PlanPagoServiceTest {
         verify(pagos).verificarAcceso(1L, "ana@example.com");
     }
 
-    @Test
-    void impedirReemplazarUnPlanExistente() {
-        when(repository.findByPago_Id(null)).thenReturn(Optional.of(
-                PlanPago.crearCuotas(pago, 2, LocalDate.of(2026, 11, 30))));
-        assertThrows(IllegalArgumentException.class, () -> service.crearCuotas(
-                1L, 3, LocalDate.of(2026, 11, 30), "ana@example.com"));
-        verify(repository, never()).save(any(PlanPago.class));
-    }
+   
+@Test
+void impedirReemplazarUnPlanExistente() {
+
+    PlanPago planExistente = PlanPago.crearCuotas(
+        pago,
+        2,
+        LocalDate.of(2026, 11, 30)
+    );
+
+    when(repository.findByPago_Id(null))
+            .thenReturn(Optional.of(planExistente));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> service.crearCuotas(
+            1L,
+            3,
+            LocalDate.of(2026, 11, 30),
+            "ana@example.com"
+        )
+    );
+
+    verify(repository, never()).save(any(PlanPago.class));
+}
 
     @Test
     void impedirCrearUnPlanParaUnPagoCompletado() {
