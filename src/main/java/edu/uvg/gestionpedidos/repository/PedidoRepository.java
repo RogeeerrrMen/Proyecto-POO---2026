@@ -42,4 +42,24 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
         @Query("SELECT p FROM Pedido p WHERE p.id = :pedidoId")
         Optional<Pedido> buscarParaPago(@Param("pedidoId") Long pedidoId);
 
+
+
+        @EntityGraph(attributePaths = {
+                "cliente",
+                "direccionEntrega",
+                "detalles.producto"
+        })
+        List<Pedido> findByEmprendimientoIdOrderByFechaPedidoDescIdDesc(
+                Long emprendimientoId);
+
+        @EntityGraph(attributePaths = {
+                "cliente",
+                "direccionEntrega",
+                "detalles.producto"
+        })
+        Optional<Pedido> findByIdAndEmprendimientoId(
+                Long id,
+                Long emprendimientoId);
+
+
 }
