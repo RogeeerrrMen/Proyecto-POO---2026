@@ -4,17 +4,33 @@ import edu.uvg.gestionpedidos.entity.Producto;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
+    // Consultas originales
     List<Producto> findAllByOrderByIdAsc();
 
-    //Solo los productos disponibles para vender.
     List<Producto> findByActivoTrueOrderByIdAsc();
 
-    // Búsqueda por nombre exacto (definida en el diseño de la segunda entrega).
     List<Producto> findByNombre(String nombre);
 
-    // Búsqueda por coincidencia parcial, sin distinguir mayúsculas de minúsculas.
-    List<Producto> findByNombreContainingIgnoreCaseOrderByIdAsc(String texto);
+    List<Producto> findByNombreContainingIgnoreCaseOrderByIdAsc(
+            String texto);
+
+    // Consultas filtradas por emprendimiento
+    List<Producto> findByEmprendimientoIdOrderByIdAsc(
+            Long emprendimientoId);
+
+    List<Producto> findByEmprendimientoIdAndActivoTrueOrderByIdAsc(
+            Long emprendimientoId);
+
+    Optional<Producto> findByIdAndEmprendimientoId(
+            Long id,
+            Long emprendimientoId);
+
+    List<Producto> findByEmprendimientoIdAndNombreContainingIgnoreCaseOrderByIdAsc(
+            Long emprendimientoId,
+            String nombre);
+            
 }
