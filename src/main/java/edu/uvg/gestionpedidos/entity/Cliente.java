@@ -5,6 +5,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 @Table(name = "clientes")
@@ -19,6 +22,10 @@ public class Cliente {
     private String nit;
     private String razonSocial;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "emprendimiento_id")
+    private Emprendimiento emprendimiento;
+
     public Cliente() {
     }
 
@@ -27,8 +34,26 @@ public class Cliente {
         this.telefono = telefono;
     }
 
+    public Cliente(String nombre,String telefono,Emprendimiento emprendimiento) {
+
+        if (emprendimiento == null) {
+            throw new IllegalArgumentException(
+                "El emprendimiento es obligatorio"
+            );
+        }
+
+        this.nombre = nombre;
+        this.telefono = telefono;
+        this.emprendimiento = emprendimiento;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public Emprendimiento getEmprendimiento() {
+        
+        return emprendimiento;
     }
 
     public String getNombre() {

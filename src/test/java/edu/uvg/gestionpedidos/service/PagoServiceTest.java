@@ -10,8 +10,12 @@ import edu.uvg.gestionpedidos.entity.*;
 import edu.uvg.gestionpedidos.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.access.AccessDeniedException;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -44,7 +48,26 @@ class PagoServiceTest {
         when(pagos.save(any(Pago.class))).thenAnswer(i -> i.getArgument(0));
         when(planes.findByPago_Id(7L)).thenReturn(Optional.empty());
         service = new PagoService(pagos, pedidos, abonos, planes, negocios);
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "ana@example.com",
+                        "password",
+                        List.of()
+                )
+        );
+
+        when(negocios.consultarEmprendimiento(
+                42L,
+                "ana@example.com"
+        )).thenReturn(negocio);
     }
+
+    @AfterEach
+    void limpiarSeguridad() {
+        
+        SecurityContextHolder.clearContext();
+}
 
     private void asignarId(Object entidad, Long id) throws Exception {
         Field field = entidad.getClass().getDeclaredField("id");

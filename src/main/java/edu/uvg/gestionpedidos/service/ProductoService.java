@@ -3,6 +3,9 @@ package edu.uvg.gestionpedidos.service;
 import edu.uvg.gestionpedidos.dto.ProductoDTO;
 import edu.uvg.gestionpedidos.entity.Producto;
 import edu.uvg.gestionpedidos.repository.ProductoRepository;
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,33 +28,68 @@ public class ProductoService {
     static final int DESCRIPCION_MAX = 500;
 
     private final ProductoRepository productoRepository;
+    private final EmprendimientoService emprendimientoService;
 
-    public ProductoService(ProductoRepository productoRepository) {
+    public ProductoService(ProductoRepository productoRepository,EmprendimientoService emprendimientoService) {
+
         this.productoRepository = productoRepository;
+        this.emprendimientoService = emprendimientoService;
     }
 
     @Transactional(readOnly = true)
     public List<Producto> listarProductos() {
-        return productoRepository.findAllByOrderByIdAsc();
+
+        Long emprendimientoId = obtenerEmprendimientoActual().getId();
+
+        return productoRepository.findByEmprendimientoIdOrderByIdAsc(emprendimientoId);
     }
 
     @Transactional(readOnly = true)
     public List<Producto> listarProductosActivos() {
-        return productoRepository.findByActivoTrueOrderByIdAsc();
+
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
+        return productoRepository
+                .findByEmprendimientoIdAndActivoTrueOrderByIdAsc(
+                    emprendimientoId
+                );
     }
 
+    
     @Transactional(readOnly = true)
     public Optional<Producto> buscarProductoPorId(Long id) {
-        return productoRepository.findById(id);
+
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
+        if (id == null || id <= 0) {
+            return Optional.empty();
+        }
+
+        return productoRepository.findByIdAndEmprendimientoId(
+                id,
+                emprendimientoId
+        );
     }
 
+
     // Busca por coincidencia parcial del nombre
-    @Transactional(readOnly = true)
+   @Transactional(readOnly = true)
     public List<Producto> buscarProductosPorNombre(String texto) {
+
         if (texto == null || texto.isBlank()) {
             return listarProductos();
         }
-        return productoRepository.findByNombreContainingIgnoreCaseOrderByIdAsc(texto.trim());
+
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
+        return productoRepository
+                .findByEmprendimientoIdAndNombreContainingIgnoreCaseOrderByIdAsc(
+                    emprendimientoId,
+                    texto.trim()
+                );
     }
 
     //Registra un producto nuevo. Todo producto nuevo queda activo.
@@ -59,10 +97,15 @@ public class ProductoService {
     public Producto registrarProducto(ProductoDTO datos) {
         validar(datos);
 
+        Emprendimiento emprendimiento =
+                obtenerEmprendimientoActual();
+
         Producto producto = new Producto();
+        producto.asignarEmprendimiento(emprendimiento);
         producto.actualizarPrecio(datos.getPrecio());
         aplicarDatos(producto, datos);
         producto.activar();
+
         return productoRepository.save(producto);
     }
 
@@ -94,10 +137,25 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
+    
     private Producto obtener(Long id) {
-        return productoRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("El producto no existe."));
+
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException(
+                "El identificador del producto no es válido."
+            );
+        }
+
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
+        return productoRepository
+                .findByIdAndEmprendimientoId(id, emprendimientoId)
+                .orElseThrow(() -> new NoSuchElementException(
+                    "El producto no existe o no está disponible."
+                ));
     }
+
 
     private void aplicarDatos(Producto producto, ProductoDTO datos) {
         producto.setNombre(datos.getNombre().trim());
@@ -125,4 +183,36 @@ public class ProductoService {
             throw new IllegalArgumentException("El precio es obligatorio.");
         }
     }
+
+
+    private String obtenerCorreoAutenticado() {
+
+        var autenticacion = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (autenticacion == null
+                || !autenticacion.isAuthenticated()
+                || "anonymousUser".equals(
+                    autenticacion.getPrincipal())) {
+
+            throw new AccessDeniedException(
+                "Debes iniciar sesión."
+            );
+        }
+
+        return autenticacion.getName();
+    }
+
+    private Emprendimiento obtenerEmprendimientoActual() {
+
+        return emprendimientoService
+                .buscarMiEmprendimiento(
+                    obtenerCorreoAutenticado()
+                )
+                .orElseThrow(() -> new AccessDeniedException(
+                    "Debes registrar tu emprendimiento."
+                ));
+    }
+
 }

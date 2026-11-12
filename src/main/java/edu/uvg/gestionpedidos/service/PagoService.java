@@ -9,6 +9,7 @@ import edu.uvg.gestionpedidos.entity.PlanPago;
 import edu.uvg.gestionpedidos.entity.PartePago;
 import edu.uvg.gestionpedidos.repository.PlanPagoRepository;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.NoSuchElementException;
 import edu.uvg.gestionpedidos.entity.Abono;
 import edu.uvg.gestionpedidos.entity.EstadoPago;
@@ -41,54 +42,112 @@ public class PagoService {
         this.emprendimientoService = emprendimientoService;
     }
 
+    
     @Transactional
     public Pago obtenerOCrearPago(Long pedidoId) {
+
         Pedido pedido = bloquearPedido(pedidoId);
+
+        verificarPropietario(
+                pedido,
+                obtenerCorreoAutenticado()
+        );
 
         return obtenerOCrearPagoBloqueado(pedido);
     }
+
 
     public Pago registrarAbono(Long pedidoId, BigDecimal monto) {
         throw new IllegalArgumentException("tienes escoger un método de pago.");
     }
 
+    
     @Transactional
-    public Pago registrarAbono(Long pedidoId, BigDecimal monto,
-            MetodoPago metodoPago, String referencia) {
-        return aplicarAbono(pedidoId, monto, metodoPago, referencia, null);
-    }
+    public Pago registrarAbono(
+            Long pedidoId,
+            BigDecimal monto,
+            MetodoPago metodoPago,
+            String referencia) {
 
-    @Transactional
-    public Pago registrarAbono(Long pedidoId, BigDecimal monto, MetodoPago metodoPago,
-            String referencia, Long parteId, String correo) {
-        // El bloqueo y la comprobación de acceso están en la misma transacción.
         Pedido pedido = bloquearPedido(pedidoId);
+
+        verificarPropietario(
+                pedido,
+                obtenerCorreoAutenticado()
+        );
+
+        return aplicarAbonoBloqueado(
+                pedido,
+                monto,
+                metodoPago,
+                referencia,
+                null
+        );
+    }
+
+
+    
+    @Transactional
+    public Pago registrarAbono(
+            Long pedidoId,
+            BigDecimal monto,
+            MetodoPago metodoPago,
+            String referencia,
+            Long parteId,
+            String correo) {
+
+        // El bloqueo y la comprobación de acceso están
+        // dentro de la misma transacción.
+        Pedido pedido = bloquearPedido(pedidoId);
+
         verificarPropietario(pedido, correo);
-        return aplicarAbonoBloqueado(pedido, monto, metodoPago, referencia, parteId);
+
+        return aplicarAbonoBloqueado(
+                pedido, monto, metodoPago, referencia, parteId);
     }
 
-    private Pago aplicarAbono(Long pedidoId, BigDecimal monto,
-            MetodoPago metodoPago, String referencia, Long parteId) {
-        return aplicarAbonoBloqueado(bloquearPedido(pedidoId), monto, metodoPago, referencia, parteId);
-    }
+    
+    private Pago aplicarAbonoBloqueado(
+            Pedido pedido,
+            BigDecimal monto,
+            MetodoPago metodoPago,
+            String referencia,
+            Long parteId) {
 
-    private Pago aplicarAbonoBloqueado(Pedido pedido, BigDecimal monto,
-            MetodoPago metodoPago, String referencia, Long parteId) {
         Pago pago = obtenerOCrearPagoBloqueado(pedido);
-        PlanPago plan = planPagoRepository.findByPago_Id(pago.getId()).orElse(null);
+
+        PlanPago plan = planPagoRepository
+                .findByPago_Id(pago.getId())
+                .orElse(null);
+
         PartePago parte = null;
+
         if (plan != null) {
             parte = plan.buscarParte(parteId);
         } else if (parteId != null) {
-            throw new IllegalArgumentException("Este pedido no tiene un plan de pagos.");
+            throw new IllegalArgumentException(
+                    "Este pedido no tiene un plan de pagos.");
         }
-        Abono abono = new Abono(pago, monto, metodoPago, referencia, parte);
-        if (parte != null) { parte.validarAbono(abono.getMonto()); }
+
+        Abono abono = new Abono(
+                pago, monto, metodoPago, referencia, parte);
+
+        if (parte != null) {
+            parte.validarAbono(abono.getMonto());
+        }
+
         pago.registrarAbono(abono.getMonto());
-        if (parte != null) { parte.registrarAbono(abono.getMonto()); }
+
+        if (parte != null) {
+            parte.registrarAbono(abono.getMonto());
+        }
+
         abonoRepository.save(abono);
+
         return pagoRepository.save(pago);
     }
+
+
 
     @Transactional(readOnly = true)
     public void verificarAcceso(Long pedidoId, String correo) {
@@ -109,18 +168,22 @@ public class PagoService {
         }
     }
 
+    
     @Transactional(readOnly = true)
     public List<AbonoHistorialDTO> consultarHistorial(Long pedidoId) {
-        validarPedidoId(pedidoId);
 
-        if (!pedidoRepository.existsById(pedidoId)) {
-            throw new IllegalArgumentException("El pedido es inexistente.");
-        }
+        verificarAcceso(
+                pedidoId,
+                obtenerCorreoAutenticado()
+        );
 
         return abonoRepository
                 .findByPago_Pedido_IdOrderByFechaDescIdDesc(pedidoId)
-                .stream().map(AbonoHistorialDTO::new).toList();
+                .stream()
+                .map(AbonoHistorialDTO::new)
+                .toList();
     }
+
 
     @Transactional(readOnly = true)
     public BigDecimal consultarMontoSinDetalle(Long pedidoId) {
@@ -145,6 +208,8 @@ public class PagoService {
 
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido es inexistente."));
+        
+        verificarPropietario(pedido,obtenerCorreoAutenticado());
 
         BigDecimal totalPedido = pedido.calcularTotal();
 
@@ -187,4 +252,24 @@ public class PagoService {
             throw new IllegalArgumentException("El identificador del pedido no es válido.");
         }
     }
+
+
+    private String obtenerCorreoAutenticado() {
+
+        var autenticacion = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (autenticacion == null
+                || !autenticacion.isAuthenticated()
+                || "anonymousUser".equals(
+                        autenticacion.getPrincipal())) {
+
+            throw new AccessDeniedException(
+                    "Debes iniciar sesión.");
+        }
+
+        return autenticacion.getName();
+    }
+
 }

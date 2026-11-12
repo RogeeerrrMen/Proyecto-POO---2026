@@ -9,6 +9,8 @@ import java.time.LocalTime;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import edu.uvg.gestionpedidos.dto.DetallePedidoDTO;
 import edu.uvg.gestionpedidos.dto.PedidoDTO;
@@ -51,7 +53,14 @@ public class PedidoService {
                 .buscarMiEmprendimiento(correoAutenticado)
                 .orElseThrow(() -> new IllegalArgumentException("Debes registrar tu emprendimiento antes de crear pedidos."));
 
-        Cliente cliente = clienteRepository.findById(datos.getClienteId()).orElseThrow(() -> new IllegalArgumentException("El cliente no existe."));
+        Cliente cliente = clienteRepository
+        .findByIdAndEmprendimientoId(
+            datos.getClienteId(),
+            emprendimiento.getId()
+        )
+        .orElseThrow(() -> new IllegalArgumentException(
+            "El cliente no existe o no pertenece a tu emprendimiento."
+        ));
 
         DireccionEntrega direccion = null;
 
@@ -74,7 +83,15 @@ public class PedidoService {
         pedido.setObservaciones(limpiarTexto(datos.getObservaciones()));
 
         for (DetallePedidoDTO detalle : datos.getDetalles()) {
-            Producto producto = productoRepository.findById(detalle.getProductoId()).orElseThrow(() -> new IllegalArgumentException("Uno de los productos seleccionados no existe."));
+
+            Producto producto = productoRepository
+            .findByIdAndEmprendimientoId(
+                detalle.getProductoId(),
+                emprendimiento.getId()
+            )
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Uno de los productos no existe o no pertenece a tu emprendimiento."
+            ));
 
             if (!producto.isActivo()) {
                 throw new IllegalArgumentException("El producto " + producto.getNombre() + " está inactivo.");
@@ -92,22 +109,38 @@ public class PedidoService {
 
     @Transactional(readOnly = true)
     public List<Pedido> listar() {
-        return pedidoRepository.findAllByOrderByFechaPedidoDescIdDesc();
+
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
+        return pedidoRepository
+                .findByEmprendimientoIdOrderByFechaPedidoDescIdDesc(
+                    emprendimientoId
+                );
     }
 
+    
     @Transactional(readOnly = true)
     public Pedido obtenerPorId(Long id) {
+
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("El identificador del pedido es inválido.");
-    }
+            throw new IllegalArgumentException(
+                "El identificador del pedido es inválido."
+            );
+        }
 
-    Pedido pedido = pedidoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("El pedido no existe."));
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
 
-    // Carga la secuencia mientras la transacción está abierta.
-    pedido.getFlujoEstados();
+        Pedido pedido = pedidoRepository
+                .findByIdAndEmprendimientoId(id, emprendimientoId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "El pedido no existe o no está disponible."
+                ));
 
-    return pedido;
+        pedido.getFlujoEstados();
+
+        return pedido;
     }
 
     @Transactional
@@ -233,4 +266,36 @@ public class PedidoService {
             throw new IllegalArgumentException(campo + " no puede superar los 255 caracteres.");
         }
     }
+
+
+    private String obtenerCorreoAutenticado() {
+
+        var autenticacion = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (autenticacion == null
+                || !autenticacion.isAuthenticated()
+                || "anonymousUser".equals(
+                    autenticacion.getPrincipal())) {
+
+            throw new AccessDeniedException(
+                "Debes iniciar sesión."
+            );
+        }
+
+        return autenticacion.getName();
+    }
+
+    private Emprendimiento obtenerEmprendimientoActual() {
+
+        return emprendimientoService
+                .buscarMiEmprendimiento(
+                    obtenerCorreoAutenticado()
+                )
+                .orElseThrow(() -> new AccessDeniedException(
+                    "Debes registrar tu emprendimiento."
+                ));
+    }
+
 }

@@ -2,6 +2,9 @@ package edu.uvg.gestionpedidos.service;
 
 import edu.uvg.gestionpedidos.entity.Cliente;
 import edu.uvg.gestionpedidos.repository.ClienteRepository;
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,50 +13,85 @@ import java.util.List;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final EmprendimientoService emprendimientoService;
 
-    public ClienteService(ClienteRepository clienteRepository) {
+    public ClienteService(ClienteRepository clienteRepository, EmprendimientoService emprendimientoService) {
+
         this.clienteRepository = clienteRepository;
+        this.emprendimientoService = emprendimientoService;
     }
 
     public Cliente registrar(String nombre, String telefono) {
         return registrar(nombre, telefono, null, null);
     }
 
-    public Cliente registrar(String nombre, String telefono, String nit, String razonSocial) {
+    
+    public Cliente registrar(String nombre,String telefono,String nit,String razonSocial) {
 
         validarDatos(nombre, telefono);
         validarDatosFacturacion(nit, razonSocial);
 
-        Cliente cliente = new Cliente(nombre.trim(), telefono.trim());
+        Emprendimiento emprendimiento = obtenerEmprendimientoActual();
+
+        Cliente cliente = new Cliente(nombre.trim(),telefono.trim(),emprendimiento);
+
         cliente.setNit(nit);
         cliente.setRazonSocial(razonSocial);
 
         return clienteRepository.save(cliente);
     }
 
+
     public List<Cliente> listar() {
-        return clienteRepository.findAll();
+
+        Emprendimiento emprendimiento = obtenerEmprendimientoActual();
+
+        return clienteRepository.findByEmprendimientoId(emprendimiento.getId());
     }
 
+    
     public Cliente obtenerPorId(Long id) {
+
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("El identificador del cliente no es valido.");
+
+            throw new IllegalArgumentException("El identificador del cliente no es válido.");
         }
 
-        return clienteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("El cliente no fue encontrado."));
+        Emprendimiento emprendimiento = obtenerEmprendimientoActual();
+
+        return clienteRepository.findByIdAndEmprendimientoId(
+
+                    id,
+                    emprendimiento.getId()
+                )
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "El cliente no existe o no está disponible."
+                ));
     }
 
+
+    
     public List<Cliente> buscar(String texto) {
+
         if (texto == null || texto.isBlank()) {
             return listar();
         }
 
+        Emprendimiento emprendimiento =
+                obtenerEmprendimientoActual();
+
         String busqueda = texto.trim();
+        Long emprendimientoId = emprendimiento.getId();
 
         return clienteRepository
-                .findByNombreContainingIgnoreCaseOrTelefonoContaining(busqueda, busqueda);
+            .findByEmprendimientoIdAndNombreContainingIgnoreCaseOrEmprendimientoIdAndTelefonoContaining(
+                emprendimientoId,
+                busqueda,
+                emprendimientoId,
+                busqueda
+            );
     }
+
 
     public Cliente modificar(Long id, String nombre, String telefono) {
         validarDatos(nombre, telefono);
@@ -107,4 +145,33 @@ public class ClienteService {
             throw new IllegalArgumentException("La razón social no puede superar los 255 caracteres.");
         }
     }
+
+
+    private String obtenerCorreoAutenticado() {
+
+        var autenticacion = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (autenticacion == null|| !autenticacion.isAuthenticated()|| "anonymousUser".equals(autenticacion.getPrincipal())) {
+
+            throw new AccessDeniedException(
+                "Debes iniciar sesión."
+            );
+        }
+
+        return autenticacion.getName();
+    }
+
+    private Emprendimiento obtenerEmprendimientoActual() {
+
+        return emprendimientoService
+                .buscarMiEmprendimiento(
+                    obtenerCorreoAutenticado()
+                )
+                .orElseThrow(() -> new AccessDeniedException(
+                    "Debes registrar tu emprendimiento."
+                ));
+    }
+
 }

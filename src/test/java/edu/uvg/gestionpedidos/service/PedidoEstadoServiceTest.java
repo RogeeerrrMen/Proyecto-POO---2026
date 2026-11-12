@@ -1,9 +1,12 @@
 package edu.uvg.gestionpedidos.service;
 
 import java.util.Optional;
+import java.util.List;
+
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 
 import edu.uvg.gestionpedidos.entity.Cliente;
 import edu.uvg.gestionpedidos.entity.DireccionEntrega;
@@ -12,6 +15,10 @@ import edu.uvg.gestionpedidos.entity.Pedido;
 import edu.uvg.gestionpedidos.repository.ClienteRepository;
 import edu.uvg.gestionpedidos.repository.PedidoRepository;
 import edu.uvg.gestionpedidos.repository.ProductoRepository;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -21,12 +28,41 @@ class PedidoEstadoServiceTest {
     private PedidoRepository pedidoRepository;
     private PedidoService pedidoService;
     private Pedido pedido;
+    private static final Long EMPRENDIMIENTO_ID = 42L;
+    private static final String CORREO = "prueba@example.com";
 
+    
     @BeforeEach
     void preparar() {
+
         pedidoRepository = mock(PedidoRepository.class);
 
-        pedidoService = new PedidoService(pedidoRepository, mock(ClienteRepository.class), mock(ProductoRepository.class), mock(EmprendimientoService.class));
+        EmprendimientoService emprendimientoService =
+                mock(EmprendimientoService.class);
+
+        Emprendimiento emprendimiento =
+                mock(Emprendimiento.class);
+
+        when(emprendimiento.getId())
+                .thenReturn(EMPRENDIMIENTO_ID);
+
+        when(emprendimientoService.buscarMiEmprendimiento(CORREO))
+                .thenReturn(Optional.of(emprendimiento));
+
+        pedidoService = new PedidoService(
+                pedidoRepository,
+                mock(ClienteRepository.class),
+                mock(ProductoRepository.class),
+                emprendimientoService
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        CORREO,
+                        "password",
+                        List.of()
+                )
+        );
 
         Cliente cliente = new Cliente("Ana", "12345678");
 
@@ -37,10 +73,23 @@ class PedidoEstadoServiceTest {
 
         pedido = new Pedido("PED-PRUEBA", cliente, direccion);
 
-        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+        when(pedidoRepository.findByIdAndEmprendimientoId(
+                1L,
+                EMPRENDIMIENTO_ID))
+                .thenReturn(Optional.of(pedido));
 
-        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+        when(pedidoRepository.save(any(Pedido.class)))
+                .thenAnswer(invocacion ->
+                        invocacion.getArgument(0));
+
     }
+
+    @AfterEach
+    void limpiarSeguridad() {
+
+        SecurityContextHolder.clearContext();
+    }
+
 
     @Test
     void avanzarHastaEntregado() {
@@ -158,7 +207,11 @@ class PedidoEstadoServiceTest {
 
     @Test
     void rechazarPedidoInexistente() {
-        when(pedidoRepository.findById(99L)).thenReturn(Optional.empty());
+
+        when(pedidoRepository.findByIdAndEmprendimientoId(
+        99L,
+        EMPRENDIMIENTO_ID))
+        .thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> pedidoService.actualizarEstado(99L, EstadoPedido.CONFIRMADO));
 

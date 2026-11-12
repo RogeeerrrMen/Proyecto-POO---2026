@@ -1,25 +1,24 @@
 package edu.uvg.gestionpedidos.repository;
+
 import edu.uvg.gestionpedidos.entity.Gasto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface GastoRepository extends JpaRepository<Gasto, Long> {
 
-    //Crea la lista de los gastos desde la fecha más reciente.
-    //Si tienen la misma fecha, ordena por identificador descendente.
+    // Métodos originales
     List<Gasto> findAllByOrderByFechaDescIdDesc();
 
-    //Consulta los gastos dentro de un período, incluyendo ambas fechas.
     List<Gasto> findByFechaBetweenOrderByFechaDescIdDesc(
             LocalDate inicio,
-            LocalDate fin
-    );
+            LocalDate fin);
 
-    //Realiza el cálculo del total de los gastos dentro del período.
     @Query("""
             SELECT SUM(g.monto)
             FROM Gasto g
@@ -27,6 +26,29 @@ public interface GastoRepository extends JpaRepository<Gasto, Long> {
             """)
     BigDecimal sumarMontosPorPeriodo(
             @Param("inicio") LocalDate inicio,
-            @Param("fin") LocalDate fin
-    );
+            @Param("fin") LocalDate fin);
+
+    // Métodos filtrados por emprendimiento
+    List<Gasto> findByEmprendimientoIdOrderByFechaDescIdDesc(
+            Long emprendimientoId);
+
+    Optional<Gasto> findByIdAndEmprendimientoId(
+            Long id,
+            Long emprendimientoId);
+
+    List<Gasto> findByEmprendimientoIdAndFechaBetweenOrderByFechaDescIdDesc(
+            Long emprendimientoId,
+            LocalDate inicio,
+            LocalDate fin);
+
+    @Query("""
+            SELECT SUM(g.monto)
+            FROM Gasto g
+            WHERE g.emprendimiento.id = :emprendimientoId
+              AND g.fecha BETWEEN :inicio AND :fin
+            """)
+    BigDecimal sumarMontosPorEmprendimientoYPeriodo(
+            @Param("emprendimientoId") Long emprendimientoId,
+            @Param("inicio") LocalDate inicio,
+            @Param("fin") LocalDate fin);
 }

@@ -6,6 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 @Table(name = "productos")
@@ -27,7 +30,12 @@ public class Producto {
     @Column(nullable = false)
     private boolean activo;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "emprendimiento_id")
+    private Emprendimiento emprendimiento;
+
     public Producto() {
+
     }
 
     public Long getId() {
@@ -40,6 +48,11 @@ public class Producto {
 
     public String getNombre() {
         return nombre;
+    }
+
+    public Emprendimiento getEmprendimiento() {
+
+        return emprendimiento;
     }
 
     public void setNombre(String nombre) {
@@ -81,6 +94,24 @@ public class Producto {
 
     //Deshabilita el producto.
     public void desactivar() {
-        this.activo = false;
+        
+            this.activo = false;
+        }
+
+        public void asignarEmprendimiento(Emprendimiento emprendimiento) {
+
+        if (emprendimiento == null) {
+            throw new IllegalArgumentException(
+                "El emprendimiento es obligatorio."
+            );
+        }
+
+        if (this.emprendimiento != null) {
+            throw new IllegalStateException(
+                "El producto ya pertenece a un emprendimiento."
+            );
+        }
+
+        this.emprendimiento = emprendimiento;
     }
 }

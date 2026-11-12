@@ -1,8 +1,12 @@
 package edu.uvg.gestionpedidos.service;
 
 import edu.uvg.gestionpedidos.dto.GastoDTO;
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
 import edu.uvg.gestionpedidos.entity.Gasto;
 import edu.uvg.gestionpedidos.repository.GastoRepository;
+
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,32 +22,56 @@ public class GastoService {
 
     private static final int DESCRIPCION_MAX = 500;
 
-    //Límite de una columna con precision = 14 y scale = 2.
     private static final BigDecimal MONTO_MAX =
             new BigDecimal("999999999999.99");
 
     private final GastoRepository gastoRepository;
+    private final EmprendimientoService emprendimientoService;
 
-    public GastoService(GastoRepository gastoRepository) {
+    public GastoService(
+            GastoRepository gastoRepository,
+            EmprendimientoService emprendimientoService) {
+
         this.gastoRepository = gastoRepository;
+        this.emprendimientoService = emprendimientoService;
     }
 
     @Transactional(readOnly = true)
     public List<Gasto> listarGastos() {
-        return gastoRepository.findAllByOrderByFechaDescIdDesc();
+
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
+        return gastoRepository
+                .findByEmprendimientoIdOrderByFechaDescIdDesc(
+                        emprendimientoId);
     }
 
     @Transactional(readOnly = true)
     public Optional<Gasto> buscarGastoPorId(Long id) {
+
         validarId(id);
-        return gastoRepository.findById(id);
+
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
+        return gastoRepository.findByIdAndEmprendimientoId(
+                id,
+                emprendimientoId);
     }
 
     @Transactional
     public Gasto registrarGasto(GastoDTO datos) {
+
         BigDecimal montoValidado = validarDatos(datos);
 
+        Emprendimiento emprendimiento =
+                obtenerEmprendimientoActual();
+
         Gasto gasto = new Gasto();
+
+        gasto.asignarEmprendimiento(emprendimiento);
+
         aplicarDatos(gasto, datos, montoValidado);
 
         return gastoRepository.save(gasto);
@@ -51,10 +79,11 @@ public class GastoService {
 
     @Transactional
     public Gasto modificarGasto(Long id, GastoDTO datos) {
+
         Gasto gasto = obtenerGasto(id);
 
-        //Realiza una validacion general antes de modificar el objeto existente.
         BigDecimal montoValidado = validarDatos(datos);
+
         aplicarDatos(gasto, datos, montoValidado);
 
         return gastoRepository.save(gasto);
@@ -63,36 +92,56 @@ public class GastoService {
     @Transactional(readOnly = true)
     public List<Gasto> consultarGastosPorPeriodo(
             LocalDate inicio,
-            LocalDate fin
-    ) {
+            LocalDate fin) {
+
         validarPeriodo(inicio, fin);
 
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
         return gastoRepository
-                .findByFechaBetweenOrderByFechaDescIdDesc(inicio, fin);
+                .findByEmprendimientoIdAndFechaBetweenOrderByFechaDescIdDesc(
+                        emprendimientoId,
+                        inicio,
+                        fin);
     }
 
     @Transactional(readOnly = true)
     public BigDecimal calcularTotalPorPeriodo(
             LocalDate inicio,
-            LocalDate fin
-    ) {
+            LocalDate fin) {
+
         validarPeriodo(inicio, fin);
 
-        BigDecimal total =
-                gastoRepository.sumarMontosPorPeriodo(inicio, fin);
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
+        BigDecimal total = gastoRepository
+                .sumarMontosPorEmprendimientoYPeriodo(
+                        emprendimientoId,
+                        inicio,
+                        fin);
 
         return total == null ? BigDecimal.ZERO : total;
     }
 
     private Gasto obtenerGasto(Long id) {
+
         validarId(id);
 
-        return gastoRepository.findById(id)
-                .orElseThrow(() ->
-                        new NoSuchElementException("El gasto no existe."));
+        Long emprendimientoId =
+                obtenerEmprendimientoActual().getId();
+
+        return gastoRepository
+                .findByIdAndEmprendimientoId(
+                        id,
+                        emprendimientoId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El gasto no existe o no está disponible."));
     }
 
     private void validarId(Long id) {
+
         if (id == null || id <= 0) {
             throw new IllegalArgumentException(
                     "El identificador del gasto debe ser positivo.");
@@ -100,6 +149,7 @@ public class GastoService {
     }
 
     private BigDecimal validarDatos(GastoDTO datos) {
+
         if (datos == null) {
             throw new IllegalArgumentException(
                     "Los datos del gasto son obligatorios.");
@@ -132,7 +182,8 @@ public class GastoService {
 
         if (monto.compareTo(MONTO_MAX) > 0) {
             throw new IllegalArgumentException(
-                    "El monto supera el máximo permitido: " + MONTO_MAX);
+                    "El monto supera el máximo permitido: "
+                            + MONTO_MAX);
         }
 
         LocalDate fecha = datos.getFecha();
@@ -149,24 +200,27 @@ public class GastoService {
 
         try {
             return monto.setScale(2, RoundingMode.UNNECESSARY);
+
         } catch (ArithmeticException e) {
             throw new IllegalArgumentException(
                     "El monto debe poder expresarse con dos decimales.");
         }
     }
 
-    //Aplica los datos del DTO al objeto Gasto, después de la validación.
     private void aplicarDatos(
             Gasto gasto,
             GastoDTO datos,
-            BigDecimal montoValidado
-    ) {
+            BigDecimal montoValidado) {
+
         gasto.setDescripcion(datos.getDescripcion().trim());
         gasto.setMonto(montoValidado);
         gasto.setFecha(datos.getFecha());
     }
 
-    private void validarPeriodo(LocalDate inicio, LocalDate fin) {
+    private void validarPeriodo(
+            LocalDate inicio,
+            LocalDate fin) {
+
         if (inicio == null || fin == null) {
             throw new IllegalArgumentException(
                     "Las fechas inicial y final son obligatorias.");
@@ -176,5 +230,32 @@ public class GastoService {
             throw new IllegalArgumentException(
                     "La fecha inicial no puede ser posterior a la final.");
         }
+    }
+
+    private String obtenerCorreoAutenticado() {
+
+        var autenticacion = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (autenticacion == null
+                || !autenticacion.isAuthenticated()
+                || "anonymousUser".equals(
+                        autenticacion.getPrincipal())) {
+
+            throw new AccessDeniedException(
+                    "Debes iniciar sesión.");
+        }
+
+        return autenticacion.getName();
+    }
+
+    private Emprendimiento obtenerEmprendimientoActual() {
+
+        return emprendimientoService
+                .buscarMiEmprendimiento(
+                        obtenerCorreoAutenticado())
+                .orElseThrow(() -> new AccessDeniedException(
+                        "Debes registrar tu emprendimiento."));
     }
 }
