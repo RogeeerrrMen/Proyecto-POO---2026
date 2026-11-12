@@ -16,6 +16,8 @@ public class Cliente {
 
     private String nombre;
     private String telefono;
+    private String nit;
+    private String razonSocial;
 
     public Cliente() {
     }
@@ -45,12 +47,44 @@ public class Cliente {
         this.telefono = telefono;
     }
 
+    public String getNit() {
+        return nit;
+    }
+
+    public void setNit(String nit) {
+        this.nit = limpiarTexto(nit);
+    }
+
+    public String getRazonSocial() {
+        return razonSocial;
+    }
+
+    public void setRazonSocial(String razonSocial) {
+        this.razonSocial = limpiarTexto(razonSocial);
+    }
+
     public void actualizarDatos(String nombre, String telefono) {
         this.nombre = nombre;
         this.telefono = telefono;
     }
 
+    public void actualizarDatos(String nombre, String telefono, String nit, String razonSocial) {
+
+        actualizarDatos(nombre, telefono);
+        setNit(nit);
+        setRazonSocial(razonSocial);
+    }
+
     public boolean coincideConTelefono(String telefono) {
-        return this.telefono != null && this.telefono.equals(telefono);
+        return this.telefono != null
+                && this.telefono.equals(telefono);
+    }
+
+    private String limpiarTexto(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return null;
+        }
+
+        return texto.trim();
     }
 }

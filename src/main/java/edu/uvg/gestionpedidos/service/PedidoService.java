@@ -1,6 +1,7 @@
 package edu.uvg.gestionpedidos.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 import java.time.LocalDate;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import edu.uvg.gestionpedidos.dto.DetallePedidoDTO;
 import edu.uvg.gestionpedidos.dto.PedidoDTO;
 import edu.uvg.gestionpedidos.entity.Cliente;
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
+import edu.uvg.gestionpedidos.entity.ModalidadEntrega;
 import edu.uvg.gestionpedidos.entity.DireccionEntrega;
 import edu.uvg.gestionpedidos.entity.Pedido;
 import edu.uvg.gestionpedidos.entity.Producto;
@@ -26,25 +29,39 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoRepository productoRepository;
+    private final EmprendimientoService emprendimientoService;
 
-    public PedidoService(PedidoRepository pedidoRepository, ClienteRepository clienteRepository, ProductoRepository productoRepository) {
+    public PedidoService(
+            PedidoRepository pedidoRepository,
+            ClienteRepository clienteRepository,
+            ProductoRepository productoRepository,
+            EmprendimientoService emprendimientoService) {
 
         this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.productoRepository = productoRepository;
+        this.emprendimientoService = emprendimientoService;
     }
 
     @Transactional
-    public Pedido registrar(PedidoDTO datos) {
+    public Pedido registrar(PedidoDTO datos, String correoAutenticado) {
         validarFormulario(datos);
 
-        Cliente cliente = clienteRepository.findById(datos.getClienteId()).orElseThrow(() -> new IllegalArgumentException("El cliente seleccionado no existe."));
+        Emprendimiento emprendimiento = emprendimientoService
+                .buscarMiEmprendimiento(correoAutenticado)
+                .orElseThrow(() -> new IllegalArgumentException("Debes registrar tu emprendimiento antes de crear pedidos."));
 
-        DireccionEntrega direccion = crearDireccion(datos);
+        Cliente cliente = clienteRepository.findById(datos.getClienteId()).orElseThrow(() -> new IllegalArgumentException("El cliente no existe."));
+
+        DireccionEntrega direccion = null;
+
+        if (datos.getModalidadEntrega() == ModalidadEntrega.ENVIO_DOMICILIO) {
+            direccion = crearDireccion(datos);
+        }
 
         String codigo = "PED-" + UUID.randomUUID();
 
-        Pedido pedido = new Pedido(codigo, cliente, direccion);
+        Pedido pedido = new Pedido(codigo, cliente, direccion, datos.getModalidadEntrega(), emprendimiento);
 
         pedido.setFechaPreparacion(datos.getFechaPreparacion());
         pedido.setHoraPreparacion(datos.getHoraPreparacion());
@@ -63,7 +80,7 @@ public class PedidoService {
                 throw new IllegalArgumentException("El producto " + producto.getNombre() + " está inactivo.");
             }
 
-            BigDecimal precioUnitario = obtenerPrecioParaPedido(producto);
+            BigDecimal precioUnitario = validarPrecioUnitario(detalle.getPrecioUnitario());
 
             pedido.agregarProducto(producto, detalle.getCantidad(), precioUnitario);
         }
@@ -82,9 +99,15 @@ public class PedidoService {
     public Pedido obtenerPorId(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("El identificador del pedido es inválido.");
-        }
+    }
 
-        return pedidoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("El pedido no existe."));
+    Pedido pedido = pedidoRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("El pedido no existe."));
+
+    // Carga la secuencia mientras la transacción está abierta.
+    pedido.getFlujoEstados();
+
+    return pedido;
     }
 
     @Transactional
@@ -95,6 +118,7 @@ public class PedidoService {
 
         Pedido pedido = obtenerPorId(id);
 
+        //Estados válidos para actualizar
         switch (nuevoEstado) {
             case CONFIRMADO -> pedido.confirmar();
             case EN_PREPARACION -> pedido.iniciarPreparacion();
@@ -109,17 +133,18 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
-    private BigDecimal obtenerPrecioParaPedido(Producto producto) {
-        double precio = producto.getPrecio();
-
-        if (!Double.isFinite(precio) || precio < 0) {
-            throw new IllegalArgumentException("El producto " + producto.getNombre() + " tiene un precio inválido.");
+    private BigDecimal validarPrecioUnitario(BigDecimal precio) {
+        if (precio == null || precio.signum() < 0) {
+            throw new IllegalArgumentException("El precio unitario es obligatorio y no puede ser negativo.");
         }
 
-        // Adaptación temporal del catálogo actual.
-        // Pendiente: coordinar con Roger Producto.precio como BigDecimal.
-        return BigDecimal.valueOf(precio);
+        try {
+            return precio.setScale(2, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("El precio unitario debe tener como máximo dos decimales.");
+        }
     }
+
     private void validarFechaYHora(LocalDate fecha, LocalTime hora, String etapa) {
 
         if (hora != null && fecha == null) {
@@ -130,6 +155,10 @@ public class PedidoService {
     private void validarFormulario(PedidoDTO datos) {
         if (datos == null) {
             throw new IllegalArgumentException("Los datos del pedido son obligatorios.");
+        }
+
+        if (datos.getModalidadEntrega() == null) {
+            throw new IllegalArgumentException("Debes seleccionar una modalidad de entrega.");
         }
 
         validarFechaYHora(datos.getFechaPreparacion(), datos.getHoraPreparacion(),"preparación");

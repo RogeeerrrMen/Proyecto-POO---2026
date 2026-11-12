@@ -1,14 +1,17 @@
 package edu.uvg.gestionpedidos.entity;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -20,6 +23,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 @Entity
@@ -37,12 +41,33 @@ public class Pedido {
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "emprendimiento_id")
+    private Emprendimiento emprendimiento;
+
+    @OneToMany(
+            mappedBy = "pedido",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private List<DetallePedido> detalles = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL, optional = false)
-    @JoinColumn(name = "direccion_entrega_id", nullable = false, unique = true)
+    @OneToOne(cascade = CascadeType.ALL, optional = true)
+    @JoinColumn(name = "direccion_entrega_id", nullable = true, unique = true)
     private DireccionEntrega direccionEntrega;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "modalidad_entrega", nullable = false)
+    private ModalidadEntrega modalidadEntrega =
+            ModalidadEntrega.ENVIO_DOMICILIO;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "pedido_estados", joinColumns = @JoinColumn(name = "pedido_id")
+    )
+    @OrderColumn(name = "posicion")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false)
+    private List<EstadoPedido> flujoEstados = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalDateTime fechaPedido;
@@ -64,10 +89,14 @@ public class Pedido {
     private String observaciones;
 
     protected Pedido() {
-    // Constructor requerido por JPA.
     }
 
     public Pedido(String codigo, Cliente cliente, DireccionEntrega direccionEntrega) {
+
+        this(codigo, cliente, direccionEntrega, ModalidadEntrega.ENVIO_DOMICILIO);
+    }
+
+    public Pedido(String codigo, Cliente cliente, DireccionEntrega direccionEntrega, ModalidadEntrega modalidadEntrega) {
 
         if (codigo == null || codigo.isBlank()) {
             throw new IllegalArgumentException("El código del pedido es obligatorio.");
@@ -77,15 +106,32 @@ public class Pedido {
             throw new IllegalArgumentException("El cliente es obligatorio.");
         }
 
-        if (direccionEntrega == null || !direccionEntrega.validarDatos()) {
-            throw new IllegalArgumentException("Los datos de entrega están incompletos o son inválidos.");
-        }
-
         this.codigo = codigo.trim();
         this.cliente = cliente;
         this.direccionEntrega = direccionEntrega;
+        this.modalidadEntrega = modalidadEntrega;
+
+        validarDatosEntrega();
+
         this.fechaPedido = LocalDateTime.now();
         this.estado = EstadoPedido.REGISTRADO;
+    }
+
+    public Pedido(String codigo, Cliente cliente, DireccionEntrega direccionEntrega, ModalidadEntrega modalidadEntrega, Emprendimiento emprendimiento) {
+
+        this(codigo, cliente, direccionEntrega, modalidadEntrega);
+
+        if (emprendimiento == null) {
+            throw new IllegalArgumentException("El emprendimiento del pedido es obligatorio.");
+        }
+
+        this.emprendimiento = emprendimiento;
+
+        List<EstadoPedido> flujoValidado =
+                MaquinaEstadosPedido.validarFlujo(
+                        emprendimiento.getFlujoEstados());
+
+        this.flujoEstados.addAll(flujoValidado);
     }
 
     public void agregarProducto(Producto producto, int cantidad, BigDecimal precioUnitario) {
@@ -107,16 +153,44 @@ public class Pedido {
 
     public void validarParaRegistro() {
         if (cliente == null) {
-            throw new IllegalArgumentException("El pedido debe tener un cliente.");
+            throw new IllegalArgumentException("El pedido tiene que tener un cliente.");
         }
 
         if (detalles.isEmpty()) {
-            throw new IllegalArgumentException("El pedido debe contener al menos un producto.");
+            throw new IllegalArgumentException("El pedido tiene que tener al menos un producto.");
         }
 
-        if (direccionEntrega == null || !direccionEntrega.validarDatos()) {
-            throw new IllegalArgumentException("Los datos de entrega son inválidos.");
+        validarDatosEntrega();
+    }
+
+    private void validarDatosEntrega() {
+        if (modalidadEntrega == null) {
+            throw new IllegalArgumentException("Debes seleccionar una modalidad de entrega.");
         }
+
+        if (modalidadEntrega == ModalidadEntrega.ENVIO_DOMICILIO
+                && direccionEntrega == null) {
+            throw new IllegalArgumentException("Los envíos a domicilio necesitan una dirección.");
+        }
+
+        if (direccionEntrega != null
+                && !direccionEntrega.validarDatos()) {
+            throw new IllegalArgumentException("Los datos de entrega están incompletos o son inválidos.");
+        }
+    }
+
+    public List<EstadoPedido> getEstadosPermitidos() {
+        if (!flujoEstados.isEmpty()) {
+            return MaquinaEstadosPedido.siguientes(estado, modalidadEntrega, flujoEstados);
+        }
+
+        // Los pedidos anteriores conservan sus reglas.
+        if (estado == EstadoPedido.LISTO
+                && modalidadEntrega == ModalidadEntrega.RECOGER_NEGOCIO) {
+            return List.of(EstadoPedido.ENTREGADO);
+        }
+
+        return estado.getEstadosPermitidos();
     }
 
     private void cambiarEstado(EstadoPedido nuevoEstado) {
@@ -124,7 +198,7 @@ public class Pedido {
             throw new IllegalArgumentException("Debes seleccionar un estado.");
         }
 
-        if (!estado.puedeCambiarA(nuevoEstado)) {
+        if (!getEstadosPermitidos().contains(nuevoEstado)) {
             throw new IllegalArgumentException("No se puede cambiar el pedido de " + estado + " a " + nuevoEstado + ".");
         }
 
@@ -171,12 +245,28 @@ public class Pedido {
         return cliente;
     }
 
+    public Emprendimiento getEmprendimiento() {
+        return emprendimiento;
+    }
+
     public List<DetallePedido> getDetalles() {
         return Collections.unmodifiableList(detalles);
     }
 
+    public List<EstadoPedido> getFlujoEstados() {
+        return List.copyOf(flujoEstados);
+    }
+
     public DireccionEntrega getDireccionEntrega() {
         return direccionEntrega;
+    }
+
+    public ModalidadEntrega getModalidadEntrega() {
+        return modalidadEntrega;
+    }
+
+    public LocalDateTime getFechaPedido() {
+        return fechaPedido;
     }
 
     public LocalDate getFechaPreparacion() {
@@ -225,10 +315,6 @@ public class Pedido {
 
     public void setHoraEntrega(LocalTime horaEntrega) {
         this.horaEntrega = horaEntrega;
-    }
-
-    public LocalDateTime getFechaPedido() {
-        return fechaPedido;
     }
 
     public EstadoPedido getEstado() {

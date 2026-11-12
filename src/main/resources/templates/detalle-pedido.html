@@ -56,7 +56,7 @@
 <section aria-labelledby="estado-title">
     <h2 id="estado-title">Actualizar estado</h2>
 
-    <form th:if="${!#lists.isEmpty(pedido.estado.estadosPermitidos)}"
+    <form th:if="${!#lists.isEmpty(pedido.estadosPermitidos)}"
           th:action="@{/pedidos/{id}/estado(id=${pedido.id})}"
           method="post"
           onsubmit="if (this.elements['nuevoEstado'].value === 'CANCELADO') {
@@ -72,7 +72,7 @@
                 Selecciona un estado
             </option>
 
-            <option th:each="estado : ${pedido.estado.estadosPermitidos}"
+            <option th:each="estado : ${pedido.estadosPermitidos}"
                     th:value="${estado.name()}"
                     th:text="${#strings.replace(estado.name(), '_', ' ')}">
             </option>
@@ -83,7 +83,7 @@
         </button>
     </form>
 
-    <p th:if="${#lists.isEmpty(pedido.estado.estadosPermitidos)}">
+    <p th:if="${#lists.isEmpty(pedido.estadosPermitidos)}">
         Este pedido está en un estado final y no permite más cambios.
     </p>
 </section>
@@ -117,10 +117,10 @@
                     <thead>
                         <tr>
                             <th scope="col">Producto</th>
-                            <th scope="col">Cantidad</th>
                             <th scope="col" class="price-cell">
                                 Precio unitario
                             </th>
+                            <th scope="col">Cantidad</th>
                             <th scope="col" class="price-cell">
                                 Subtotal
                             </th>
@@ -130,12 +130,13 @@
                     <tbody>
                         <tr th:each="detalle : ${pedido.detalles}">
                             <td th:text="${detalle.producto.nombre}"></td>
-                            <td th:text="${detalle.cantidad}"></td>
 
                             <td class="price-cell"
                                 th:text="${#numbers.formatDecimal(
                                     detalle.precioUnitario, 1, 2)}">
                             </td>
+
+                            <td th:text="${detalle.cantidad}"></td>
 
                             <td class="price-cell"
                                 th:text="${#numbers.formatDecimal(
@@ -161,36 +162,16 @@
         <section aria-labelledby="entrega-title">
             <h2 id="entrega-title">Datos de entrega</h2>
 
-            
-        <section aria-labelledby="resumen-pago-title">
-            <h2 id="resumen-pago-title">Resumen del pago</h2>
+            <p>
+                <strong>Modalidad:</strong>
+                <span th:text="${pedido.modalidadEntrega.descripcion}"></span>
+            </p>
 
-            <dl>
-                <dt>Total del pedido</dt>
-                <dd>
-                    Q<span th:text="${#numbers.formatDecimal(
-                        resumenPago.totalPedido, 1, 2)}"></span>
-                </dd>
+            <p th:if="${pedido.modalidadEntrega.name() == 'RECOGER_NEGOCIO'}">
+                El cliente recogerá el pedido en el negocio.
+            </p>
 
-                <dt>Total abonado</dt>
-                <dd>
-                    Q<span th:text="${#numbers.formatDecimal(
-                        resumenPago.totalAbonado, 1, 2)}"></span>
-                </dd>
-
-                <dt>Saldo pendiente</dt>
-                <dd>
-                    Q<span th:text="${#numbers.formatDecimal(
-                        resumenPago.saldoPendiente, 1, 2)}"></span>
-                </dd>
-
-                <dt>Estado del pago</dt>
-                <dd th:text="${resumenPago.estado}"></dd>
-            </dl>
-        </section>
-
-
-            <dl>
+            <dl th:if="${pedido.direccionEntrega != null}">
                 <dt>Receptor</dt>
                 <dd th:text="${pedido.direccionEntrega.nombreReceptor}"></dd>
 
@@ -201,54 +182,50 @@
                 <dd th:text="${pedido.direccionEntrega.direccion}"></dd>
 
                 <dt>Referencias</dt>
-                <dd th:text="${pedido.direccionEntrega.referencias
-                    ?: 'Sin referencias'}"></dd>
+                <dd th:text="${pedido.direccionEntrega.referencias ?: 'Sin referencias'}"></dd>
 
                 <dt>Enlace de mapa</dt>
-                <dd th:text="${pedido.direccionEntrega.enlaceMapa
-                    ?: 'Sin enlace'}"></dd>
+                <dd th:text="${pedido.direccionEntrega.enlaceMapa ?: 'Sin enlace'}"></dd>
+            </dl>
+        </section>
+
+        <section aria-labelledby="resumen-pago-title">
+            <h2 id="resumen-pago-title">Resumen del pago</h2>
+
+            <dl>
+                <dt>Total del pedido</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(resumenPago.totalPedido, 1, 2)}"></span>
+                </dd>
+
+                <dt>Total abonado</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(resumenPago.totalAbonado, 1, 2)}"></span>
+                </dd>
+
+                <dt>Saldo pendiente</dt>
+                <dd>
+                    Q<span th:text="${#numbers.formatDecimal(resumenPago.saldoPendiente, 1, 2)}"></span>
+                </dd>
+
+                <dt>Estado del pago</dt>
+                <dd th:text="${resumenPago.estado}"></dd>
             </dl>
         </section>
 
         <section aria-labelledby="fechas-title">
-            <h2 id="fechas-title">Fechas de planificación</h2>
+            <h2 id="fechas-title">Fecha de entrega o recogida</h2>
 
             <dl>
-                <dt>Preparación</dt>
-                <dd>
-                    <span th:text="${pedido.fechaPreparacion != null
-                        ? #temporals.format(pedido.fechaPreparacion, 'dd/MM/yyyy')
-                        : 'Sin programar'}"></span>
+                <dt>Fecha</dt>
+                <dd th:text="${pedido.fechaEntrega != null
+                    ? #temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')
+                    : 'Sin programar'}"></dd>
 
-                    <span th:if="${pedido.fechaPreparacion != null}"
-                        th:text="${pedido.horaPreparacion != null
-                            ? ' — ' + #temporals.format(pedido.horaPreparacion, 'HH:mm')
-                            : ' — Sin hora especificada'}"></span>
-                </dd>
-
-                <dt>Envío</dt>
-                <dd>
-                    <span th:text="${pedido.fechaEnvio != null
-                        ? #temporals.format(pedido.fechaEnvio, 'dd/MM/yyyy')
-                        : 'Sin programar'}"></span>
-
-                    <span th:if="${pedido.fechaEnvio != null}"
-                        th:text="${pedido.horaEnvio != null
-                            ? ' — ' + #temporals.format(pedido.horaEnvio, 'HH:mm')
-                            : ' — Sin hora especificada'}"></span>
-                </dd>
-
-                <dt>Entrega</dt>
-                <dd>
-                    <span th:text="${pedido.fechaEntrega != null
-                        ? #temporals.format(pedido.fechaEntrega, 'dd/MM/yyyy')
-                        : 'Sin programar'}"></span>
-
-                    <span th:if="${pedido.fechaEntrega != null}"
-                        th:text="${pedido.horaEntrega != null
-                            ? ' — ' + #temporals.format(pedido.horaEntrega, 'HH:mm')
-                            : ' — Sin hora especificada'}"></span>
-                </dd>
+                <dt>Hora</dt>
+                <dd th:text="${pedido.horaEntrega != null
+                    ? #temporals.format(pedido.horaEntrega, 'HH:mm')
+                    : 'Sin hora especificada'}"></dd>
             </dl>
         </section>
 

@@ -1,5 +1,7 @@
 package edu.uvg.gestionpedidos.controller;
 
+import java.security.Principal;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -61,7 +63,7 @@ public class PedidoController {
     }
 
     @PostMapping
-    public String registrar(@ModelAttribute("pedidoDTO") PedidoDTO datos, BindingResult resultado, Model model, RedirectAttributes mensajes) {
+    public String registrar(@ModelAttribute("pedidoDTO") PedidoDTO datos, BindingResult resultado, Principal principal, Model model, RedirectAttributes mensajes) {
 
         // Detecta valores que Spring no pudo convertir:
         // por ejemplo, una cantidad escrita como texto.
@@ -74,7 +76,7 @@ public class PedidoController {
         }
 
         try {
-            Pedido pedido = pedidoService.registrar(datos);
+            Pedido pedido = pedidoService.registrar(datos, principal.getName());
 
             mensajes.addFlashAttribute("exito", "El pedido se registró correctamente.");
 
@@ -138,8 +140,7 @@ public class PedidoController {
             estado = EstadoPedido.valueOf(nuevoEstado);
 
         } catch (IllegalArgumentException e) {
-            mensajes.addFlashAttribute(
-                    "error", "Selecciona un estado válido.");
+            mensajes.addFlashAttribute("error", "Selecciona un estado válido.");
 
             return "redirect:/pedidos/" + id;
         }
@@ -147,8 +148,7 @@ public class PedidoController {
         try {
             pedidoService.actualizarEstado(id, estado);
 
-            mensajes.addFlashAttribute(
-                    "exito", "El estado del pedido se actualizó correctamente.");
+            mensajes.addFlashAttribute("exito", "El estado del pedido se actualizó correctamente.");
 
         } catch (IllegalArgumentException e) {
             mensajes.addFlashAttribute("error", e.getMessage());

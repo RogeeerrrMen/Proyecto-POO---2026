@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title th:text="${titulo}">Formulario de cliente</title>
+
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 
@@ -32,7 +34,7 @@
             </h1>
 
             <p class="card-subtitle">
-                Completa los datos de contacto de tu cliente.
+                Completa los datos de contacto y facturación de tu cliente.
             </p>
 
             <p class="cliente-error"
@@ -44,36 +46,64 @@
                   th:object="${cliente}"
                   method="post">
 
+                <h2>Datos de contacto</h2>
+
                 <div class="form-group">
                     <label for="nombre">Nombre</label>
-                    <input
-                        type="text"
-                        id="nombre"
-                        th:field="*{nombre}"
-                        placeholder="Nombre del cliente"
-                        autocomplete="name"
-                        required
-                    >
+
+                    <input type="text"
+                           id="nombre"
+                           th:field="*{nombre}"
+                           placeholder="Nombre del cliente"
+                           autocomplete="name"
+                           maxlength="255"
+                           required>
                 </div>
 
                 <div class="form-group">
                     <label for="telefono">Teléfono</label>
-                    <input
-                        type="tel"
-                        id="telefono"
-                        th:field="*{telefono}"
-                        placeholder="Número de contacto."
-                        autocomplete="tel"
-                        pattern="\+?[0-9]+"
-                        title="Ingresa solo números."
-                        aria-describedby="telefono-ayuda"
-                        required
-                    >
+
+                    <input type="tel"
+                           id="telefono"
+                           th:field="*{telefono}"
+                           placeholder="Número de contacto"
+                           autocomplete="tel"
+                           pattern="\+?[0-9]+"
+                           title="Ingresa números con un + opcional al inicio."
+                           aria-describedby="telefono-ayuda"
+                           maxlength="255"
+                           required>
 
                     <small id="telefono-ayuda" class="cliente-ayuda">
-                        Si el teléfono es de otro país, incluye + y el código de país al inicio.
+                        Si el teléfono es de otro país, incluye + y el
+                        código de país al inicio.
                     </small>
+                </div>
 
+                <h2>Datos de facturación</h2>
+
+                <p class="cliente-ayuda">
+                    Estos datos son opcionales.
+                </p>
+
+                <div class="form-group">
+                    <label for="nit">NIT (opcional)</label>
+
+                    <input type="text"
+                           id="nit"
+                           th:field="*{nit}"
+                           placeholder="NIT del cliente"
+                           maxlength="255">
+                </div>
+
+                <div class="form-group">
+                    <label for="razonSocial">Razón social (opcional)</label>
+
+                    <input type="text"
+                           id="razonSocial"
+                           th:field="*{razonSocial}"
+                           placeholder="Nombre para la facturación"
+                           maxlength="255">
                 </div>
 
                 <button class="btn btn-primary" type="submit">

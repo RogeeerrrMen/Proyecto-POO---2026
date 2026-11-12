@@ -77,7 +77,9 @@
                         <thead>
                             <tr>
                                 <th scope="col">Producto</th>
+                                <th scope="col">Precio unitario (Q)</th>
                                 <th scope="col">Cantidad</th>
+                                <th scope="col">Subtotal (Q)</th>
                                 <th scope="col">Acción</th>
                             </tr>
                         </thead>
@@ -109,6 +111,18 @@
 
                                 <td>
                                     <div class="form-group">
+                                        <input type="number"
+                                               data-campo="precioUnitario"
+                                               aria-label="Precio unitario"
+                                               th:field="*{detalles[__${fila.index}__].precioUnitario}"
+                                               min="0"
+                                               step="0.01"
+                                               required>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="form-group">
                                         <input
                                             type="number"
                                             data-campo="cantidad"
@@ -120,6 +134,8 @@
                                             required>
                                     </div>
                                 </td>
+
+                                <td class="price-cell"><output data-subtotal>0.00</output></td>
 
                                 <td>
                                     <button type="button"
@@ -141,119 +157,100 @@
                 </button>
 
                 <p role="status" aria-live="polite">
-                    Total estimado:
-                    <strong id="total-estimado">0.00</strong>
+                    Total: Q
+                    <strong id="total-pedido">0.00</strong>
                 </p>
 
                 <p class="cliente-ayuda">
-                    El total definitivo se calcula al guardar,
-                    con los precios vigentes del catálogo.
+                    Puedes ajustar el precio unitario para este pedido.
+                    El precio del catálogo se conserva.
                 </p>
 
                 <h2>Entrega</h2>
 
                 <div class="form-group">
-                    <label for="nombreReceptor">Nombre del receptor</label>
-                    <input type="text"
-                           id="nombreReceptor"
-                           th:field="*{nombreReceptor}"
-                           maxlength="255"
-                           required>
+                    <label for="modalidadEntrega">Modalidad de entrega</label>
+                    <select id="modalidadEntrega"
+                            th:field="*{modalidadEntrega}"
+                            required>
+                        <option value="ENVIO_DOMICILIO">Envío a domicilio</option>
+                        <option value="RECOGER_NEGOCIO">Recoger en el negocio</option>
+                    </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="telefonoReceptor">
-                        Teléfono del receptor
-                    </label>
+                <p id="aviso-recoger" hidden>
+                    El cliente recogerá el pedido en el negocio.
+                    No es necesario ingresar una dirección de entrega.
+                </p>
 
-                    <input type="tel"
-                           id="telefonoReceptor"
-                           th:field="*{telefonoReceptor}"
-                           pattern="\+?[0-9]+"
-                           title="Ingresa números con un + opcional al inicio."
-                           maxlength="255"
-                           required>
+                <div id="datos-entrega">
+                    <div class="form-group">
+                        <label for="nombreReceptor">Nombre del receptor</label>
+                        <input type="text"
+                               id="nombreReceptor"
+                               th:field="*{nombreReceptor}"
+                               maxlength="255"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefonoReceptor">Teléfono del receptor</label>
+                        <input type="tel"
+                               id="telefonoReceptor"
+                               th:field="*{telefonoReceptor}"
+                               pattern="\+?[0-9]+"
+                               title="Ingresa números con un + opcional al inicio."
+                               maxlength="255"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direccion">Dirección de entrega</label>
+                        <textarea id="direccion"
+                                  th:field="*{direccion}"
+                                  rows="3"
+                                  maxlength="255"
+                                  required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="referencias">Referencias (opcional)</label>
+                        <textarea id="referencias"
+                                  th:field="*{referencias}"
+                                  rows="2"
+                                  maxlength="255"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="enlaceMapa">Enlace de Google Maps (opcional)</label>
+                        <input type="url"
+                               id="enlaceMapa"
+                               th:field="*{enlaceMapa}"
+                               maxlength="255"
+                               placeholder="https://maps.google.com/...">
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="direccion">Dirección de entrega</label>
-                    <textarea id="direccion"
-                              th:field="*{direccion}"
-                              rows="3"
-                              maxlength="255"
-                              required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="referencias">Referencias (opcional)</label>
-                    <textarea id="referencias"
-                              th:field="*{referencias}"
-                              rows="2"
-                              maxlength="255"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="enlaceMapa">
-                        Enlace de Google Maps (opcional)
-                    </label>
-
-                    <input type="url"
-                           id="enlaceMapa"
-                           th:field="*{enlaceMapa}"
-                           maxlength="255"
-                           placeholder="https://maps.google.com/...">
-                </div>
-
-                <h2>Fechas</h2>
+                <h2>Fecha de entrega o recogida</h2>
 
                 <p class="cliente-ayuda">
-                    Las fechas de planificación son opcionales.
-                    Puedes seleccionar una fecha sin indicar una hora.
+                    La fecha de entrega o recogida es opcional.
+                    Si indicas una hora, también debes seleccionar una fecha.
                     La fecha de registro se asigna automáticamente.
                 </p>
 
                 <div class="form-group">
-                    <label for="fechaPreparacion">Fecha de preparación</label>
+                    <label for="fechaEntrega">Fecha de entrega o recogida</label>
                     <input type="date"
-                        id="fechaPreparacion"
-                        th:field="*{fechaPreparacion}">
+                           id="fechaEntrega"
+                           th:field="*{fechaEntrega}">
                 </div>
 
                 <div class="form-group">
-                    <label for="horaPreparacion">
-                        Hora de preparación (opcional)
-                    </label>
+                    <label for="horaEntrega">Hora de entrega o recogida (opcional)</label>
                     <input type="time"
-                        id="horaPreparacion"
-                        th:field="*{horaPreparacion}">
-                </div>
-
-                <div class="form-group">
-                    <label for="fechaEnvio">Fecha de envío</label>
-                    <input type="date"
-                        id="fechaEnvio"
-                        th:field="*{fechaEnvio}">
-                </div>
-
-                <div class="form-group">
-                    <label for="horaEnvio">Hora de envío (opcional)</label>
-                    <input type="time"
-                        id="horaEnvio"
-                        th:field="*{horaEnvio}">
-                </div>
-
-                <div class="form-group">
-                    <label for="fechaEntrega">Fecha de entrega</label>
-                    <input type="date"
-                        id="fechaEntrega"
-                        th:field="*{fechaEntrega}">
-                </div>
-
-                <div class="form-group">
-                    <label for="horaEntrega">Hora de entrega (opcional)</label>
-                    <input type="time"
-                        id="horaEntrega"
-                        th:field="*{horaEntrega}">
+                           id="horaEntrega"
+                           th:field="*{horaEntrega}">
                 </div>
 
                 <div class="form-group">
@@ -305,6 +302,17 @@
             <td>
                 <div class="form-group">
                     <input type="number"
+                           data-campo="precioUnitario"
+                           aria-label="Precio unitario"
+                           min="0"
+                           step="0.01"
+                           required>
+                </div>
+            </td>
+
+            <td>
+                <div class="form-group">
+                    <input type="number"
                            data-campo="cantidad"
                            aria-label="Cantidad"
                            value="1"
@@ -314,6 +322,8 @@
                            required>
                 </div>
             </td>
+
+            <td class="price-cell"><output data-subtotal>0.00</output></td>
 
             <td>
                 <button type="button"
@@ -329,46 +339,61 @@
         const detalles = document.getElementById("detalles");
         const plantilla = document.getElementById("fila-producto");
         const agregar = document.getElementById("agregar-producto");
-        const totalEstimado = document.getElementById("total-estimado");
+        const totalPedido = document.getElementById("total-pedido");
+        const formato = new Intl.NumberFormat("es-GT", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
         function actualizarIndices() {
             detalles.querySelectorAll("tr").forEach((fila, indice) => {
                 fila.querySelectorAll("[data-campo]").forEach(campo => {
                     const propiedad = campo.dataset.campo;
-
                     campo.name = `detalles[${indice}].${propiedad}`;
                     campo.id = `detalle-${indice}-${propiedad}`;
                 });
             });
         }
 
+        function cargarPrecioCatalogo(fila, conservarPrecio = false) {
+            const selector = fila.querySelector('[data-campo="productoId"]');
+            const precioInput = fila.querySelector('[data-campo="precioUnitario"]');
+
+            if (conservarPrecio && precioInput.value !== "") {
+                return;
+            }
+
+            const valor = selector.selectedOptions[0]?.dataset.precio;
+            const precio = Number(valor);
+            precioInput.value = selector.value && valor !== undefined
+                && Number.isFinite(precio) && precio >= 0
+                ? precio.toFixed(2) : "";
+        }
+
         function actualizarTotal() {
-            let total = 0;
+            let totalCentavos = 0;
 
             detalles.querySelectorAll("tr").forEach(fila => {
-                const selector = fila.querySelector(
-                    '[data-campo="productoId"]'
-                );
-
-                const cantidadInput = fila.querySelector(
-                    '[data-campo="cantidad"]'
-                );
-
-                const opcion = selector.selectedOptions[0];
-                const precio = Number(opcion?.dataset.precio);
+                const selector = fila.querySelector('[data-campo="productoId"]');
+                const precioInput = fila.querySelector('[data-campo="precioUnitario"]');
+                const cantidadInput = fila.querySelector('[data-campo="cantidad"]');
+                const precio = Number(precioInput.value);
                 const cantidad = Number(cantidadInput.value);
+                let subtotalCentavos = 0;
 
-                if (Number.isFinite(precio)
-                        && Number.isInteger(cantidad)
-                        && cantidad > 0) {
-                    total += precio * cantidad;
+                if (selector.value && precioInput.value !== ""
+                        && precioInput.validity.valid && cantidadInput.validity.valid
+                        && Number.isFinite(precio) && precio >= 0
+                        && Number.isInteger(cantidad) && cantidad > 0) {
+                    subtotalCentavos = Math.round(precio * 100) * cantidad;
                 }
+
+                fila.querySelector("[data-subtotal]").textContent =
+                    formato.format(subtotalCentavos / 100);
+                totalCentavos += subtotalCentavos;
             });
 
-            totalEstimado.textContent = total.toLocaleString("es-GT", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+            totalPedido.textContent = formato.format(totalCentavos / 100);
         }
 
         agregar.addEventListener("click", () => {
@@ -388,10 +413,39 @@
         });
 
         detalles.addEventListener("input", actualizarTotal);
-        detalles.addEventListener("change", actualizarTotal);
+        detalles.addEventListener("change", evento => {
+            if (evento.target.matches('[data-campo="productoId"]')) {
+                cargarPrecioCatalogo(evento.target.closest("tr"));
+            }
+            actualizarTotal();
+        });
 
         actualizarIndices();
+        detalles.querySelectorAll("tr").forEach(fila => cargarPrecioCatalogo(fila, true));
         actualizarTotal();
+
+        const modalidadEntrega = document.getElementById("modalidadEntrega");
+        const datosEntrega = document.getElementById("datos-entrega");
+        const avisoRecoger = document.getElementById("aviso-recoger");
+        const camposEntrega = datosEntrega.querySelectorAll("input, textarea, select");
+
+        camposEntrega.forEach(campo => {
+            campo.dataset.obligatorio = String(campo.required);
+        });
+
+        function actualizarModalidadEntrega() {
+            const recoger = modalidadEntrega.value === "RECOGER_NEGOCIO";
+            datosEntrega.hidden = recoger;
+            avisoRecoger.hidden = !recoger;
+
+            camposEntrega.forEach(campo => {
+                campo.disabled = recoger;
+                campo.required = !recoger && campo.dataset.obligatorio === "true";
+            });
+        }
+
+        modalidadEntrega.addEventListener("change", actualizarModalidadEntrega);
+        actualizarModalidadEntrega();
     </script>
 </body>
 

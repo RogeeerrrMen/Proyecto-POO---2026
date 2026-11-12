@@ -6,6 +6,12 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
+
 import edu.uvg.gestionpedidos.entity.Pedido;
 
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
@@ -31,4 +37,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
             "detalles.producto"
     })
     List<Pedido> findAllByOrderByFechaPedidoDescIdDesc();
+
+        @Lock(LockModeType.PESSIMISTIC_WRITE)
+        @Query("SELECT p FROM Pedido p WHERE p.id = :pedidoId")
+        Optional<Pedido> buscarParaPago(@Param("pedidoId") Long pedidoId);
+
 }

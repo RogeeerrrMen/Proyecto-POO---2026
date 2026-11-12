@@ -1,5 +1,7 @@
 package edu.uvg.gestionpedidos.dto;
 
+import edu.uvg.gestionpedidos.entity.ModalidadEntrega;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -9,7 +11,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 public class PedidoDTO {
 
-    private Long clienteId;
+    private Long clienteId; 
+    private ModalidadEntrega modalidadEntrega = ModalidadEntrega.ENVIO_DOMICILIO;
 
     private List<DetallePedidoDTO> detalles = new ArrayList<>();
 
@@ -152,5 +155,13 @@ public class PedidoDTO {
 
     public void setEnlaceMapa(String enlaceMapa) {
         this.enlaceMapa = enlaceMapa;
+    }
+
+    public ModalidadEntrega getModalidadEntrega() {
+        return modalidadEntrega;
+    }
+
+    public void setModalidadEntrega(ModalidadEntrega modalidadEntrega) {
+        this.modalidadEntrega = modalidadEntrega;
     }
 }

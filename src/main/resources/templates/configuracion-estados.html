@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Configurar estados</title>
+
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+
+<body>
+    <header class="navbar">
+        <a class="logo" th:href="@{/dashboard}">
+            Gestión de Pedidos
+        </a>
+
+        <nav class="nav-links">
+            <a class="btn btn-secondary" th:href="@{/emprendimientos}">
+                Volver a configuración
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        <section class="card">
+            <h1 class="card-title">Estados de tus pedidos</h1>
+
+            <p class="card-subtitle">
+                Configura la secuencia de trabajo de
+                <strong th:text="${emprendimiento.nombre}"></strong>.
+            </p>
+
+            <p th:if="${mensaje}"
+               th:text="${mensaje}"
+               class="form-success"
+               role="status"></p>
+
+            <p th:if="${error}"
+               th:text="${error}"
+               class="form-error"
+               role="alert"></p>
+
+            <p>
+                Modifica los estados intermedios que necesitas 
+                y usa los botones para cambiar su orden.
+            </p>
+
+            <p>
+                REGISTRADO es el inicio. ENVIADO y ENTREGADO cierran
+                la secuencia. Para recoger en el negocio se omitirá ENVIADO.
+            </p>
+
+            <form th:action="@{/emprendimientos/estados}"
+                  method="post"
+                  id="formulario-estados">
+
+                <div class="form-group">
+                    <label for="estado-disponible">
+                        Estados disponibles para agregar
+                    </label>
+
+                    <select id="estado-disponible"></select>
+                </div>
+
+                <button type="button"
+                        id="agregar-estado"
+                        class="btn btn-secondary">
+                    Agregar estado
+                </button>
+
+                <div class="table-container">
+                    <table class="products-table">
+                        <caption>Secuencia de estados</caption>
+
+                        <thead>
+                            <tr>
+                                <th scope="col">Orden</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>REGISTRADO</td>
+                                <td>Inicio fijo</td>
+                            </tr>
+                        </tbody>
+
+                        <tbody id="estados-intermedios"></tbody>
+
+                        <tbody>
+                            <tr>
+                                <td id="posicion-enviado"></td>
+                                <td>ENVIADO</td>
+                                <td>Se omite para recoger</td>
+                            </tr>
+
+                            <tr>
+                                <td id="posicion-entregado"></td>
+                                <td>ENTREGADO</td>
+                                <td>Final fijo</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p id="resumen-flujo" role="status" aria-live="polite"></p>
+
+                <p>
+                    CANCELADO es una salida alternativa antes del envío
+                    o la entrega. FALLIDO está disponible desde ENVIADO.
+                </p>
+
+                <div id="campos-estados"></div>
+
+                <button type="submit"
+                        id="guardar-estados"
+                        class="btn btn-primary"
+                        disabled>
+                    Guardar configuración
+                </button>
+
+                <a class="btn btn-secondary" th:href="@{/emprendimientos}">
+                    Volver
+                </a>
+
+                <noscript>
+                    <p>
+                        Activa JavaScript para editar y guardar la secuencia.
+                    </p>
+                </noscript>
+            </form>
+        </section>
+    </main>
+
+    <script th:inline="javascript">
+        const estadosIniciales =
+            /*[[${configuracionEstadosDTO.estados}]]*/ [];
+
+        const estadosDisponibles =
+            /*[[${estadosDisponibles}]]*/ [];
+
+        const estadosFijos = [
+            "REGISTRADO",
+            "ENVIADO",
+            "ENTREGADO"
+        ];
+
+        const opcionesIntermedias = estadosDisponibles.filter(
+            estado => !estadosFijos.includes(estado)
+        );
+
+        const intermedios = estadosIniciales.filter(
+            estado => opcionesIntermedias.includes(estado)
+        );
+
+        const selector = document.getElementById("estado-disponible");
+        const agregar = document.getElementById("agregar-estado");
+        const tabla = document.getElementById("estados-intermedios");
+        const campos = document.getElementById("campos-estados");
+        const resumen = document.getElementById("resumen-flujo");
+
+        function nombreEstado(estado) {
+            return estado.replaceAll("_", " ");
+        }
+
+        function crearBoton(texto, accion, indice, desactivado = false) {
+            const boton = document.createElement("button");
+
+            boton.type = "button";
+            boton.className = "btn btn-secondary";
+            boton.textContent = texto;
+            boton.dataset.accion = accion;
+            boton.dataset.indice = String(indice);
+            boton.disabled = desactivado;
+
+            return boton;
+        }
+
+        function actualizarPantalla() {
+            tabla.replaceChildren();
+            selector.replaceChildren();
+            campos.replaceChildren();
+
+            intermedios.forEach((estado, indice) => {
+                const fila = document.createElement("tr");
+
+                const orden = document.createElement("td");
+                orden.textContent = String(indice + 2);
+
+                const nombre = document.createElement("td");
+                nombre.textContent = nombreEstado(estado);
+
+                const acciones = document.createElement("td");
+
+                acciones.append(
+                    crearBoton("Subir", "subir", indice, indice === 0),
+                    document.createTextNode(" "),
+                    crearBoton(
+                        "Bajar",
+                        "bajar",
+                        indice,
+                        indice === intermedios.length - 1
+                    ),
+                    document.createTextNode(" "),
+                    crearBoton("Quitar", "quitar", indice)
+                );
+
+                fila.append(orden, nombre, acciones);
+                tabla.appendChild(fila);
+            });
+
+            const disponibles = opcionesIntermedias.filter(
+                estado => !intermedios.includes(estado)
+            );
+
+            if (disponibles.length === 0) {
+                const opcion = document.createElement("option");
+
+                opcion.value = "";
+                opcion.textContent = "No hay más estados disponibles";
+
+                selector.appendChild(opcion);
+            } else {
+                disponibles.forEach(estado => {
+                    const opcion = document.createElement("option");
+
+                    opcion.value = estado;
+                    opcion.textContent = nombreEstado(estado);
+
+                    selector.appendChild(opcion);
+                });
+            }
+
+            selector.disabled = disponibles.length === 0;
+            agregar.disabled = disponibles.length === 0;
+
+            const secuencia = [
+                "REGISTRADO",
+                ...intermedios,
+                "ENVIADO",
+                "ENTREGADO"
+            ];
+
+            secuencia.forEach((estado, indice) => {
+                const campo = document.createElement("input");
+
+                campo.type = "hidden";
+                campo.name = `estados[${indice}]`;
+                campo.value = estado;
+
+                campos.appendChild(campo);
+            });
+
+            document.getElementById("posicion-enviado").textContent =
+                String(intermedios.length + 2);
+
+            document.getElementById("posicion-entregado").textContent =
+                String(intermedios.length + 3);
+
+            resumen.textContent =
+                "Secuencia: " + secuencia.map(nombreEstado).join(" → ");
+        }
+
+        agregar.addEventListener("click", () => {
+            const estado = selector.value;
+
+            if (!opcionesIntermedias.includes(estado)
+                    || intermedios.includes(estado)) {
+                return;
+            }
+
+            intermedios.push(estado);
+            actualizarPantalla();
+        });
+
+        tabla.addEventListener("click", evento => {
+            const boton = evento.target.closest("button[data-accion]");
+
+            if (!boton || boton.disabled) {
+                return;
+            }
+
+            const indice = Number(boton.dataset.indice);
+            const accion = boton.dataset.accion;
+
+            if (accion === "quitar") {
+                intermedios.splice(indice, 1);
+            }
+
+            if (accion === "subir" && indice > 0) {
+                [intermedios[indice - 1], intermedios[indice]] =
+                    [intermedios[indice], intermedios[indice - 1]];
+            }
+
+            if (accion === "bajar" && indice < intermedios.length - 1) {
+                [intermedios[indice], intermedios[indice + 1]] =
+                    [intermedios[indice + 1], intermedios[indice]];
+            }
+
+            actualizarPantalla();
+        });
+
+        actualizarPantalla();
+
+        document.getElementById("guardar-estados").disabled = false;
+    </script>
+</body>
+
+</html>

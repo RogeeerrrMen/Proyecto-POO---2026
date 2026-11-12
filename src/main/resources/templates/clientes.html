@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Gestión de clientes</title>
+
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 
@@ -25,9 +27,11 @@
         <header class="products-heading">
             <div>
                 <p class="eyebrow">TU EMPRENDIMIENTO</p>
+
                 <h1 class="card-title">Tus clientes.</h1>
+
                 <p class="card-subtitle">
-                    Consulta y actualiza sus datos de contacto.
+                    Consulta y actualiza sus datos de contacto y facturación.
                 </p>
             </div>
 
@@ -42,13 +46,12 @@
 
             <div class="form-group">
                 <label for="busqueda">Buscar por nombre o teléfono</label>
-                <input
-                    type="search"
-                    id="busqueda"
-                    name="busqueda"
-                    th:value="${busqueda}"
-                    placeholder="Escribe un nombre o teléfono"
-                >
+
+                <input type="search"
+                       id="busqueda"
+                       name="busqueda"
+                       th:value="${busqueda}"
+                       placeholder="Escribe un nombre o teléfono">
             </div>
 
             <div class="clientes-actions">
@@ -65,9 +68,8 @@
         <section class="empty-state"
                  th:if="${#lists.isEmpty(clientes)}">
             <h2>No se encontraron clientes.</h2>
-            <p>
-                Registra un cliente o intenta con otra búsqueda.
-            </p>
+
+            <p>Registra un cliente o intenta con otra búsqueda.</p>
         </section>
 
         <div class="table-container"
@@ -75,7 +77,7 @@
 
             <table class="products-table">
                 <caption class="visually-hidden">
-                    Clientes y sus datos de contacto
+                    Clientes y sus datos de contacto y facturación
                 </caption>
 
                 <thead>
@@ -83,6 +85,8 @@
                         <th scope="col">ID</th>
                         <th scope="col">Nombre</th>
                         <th scope="col">Teléfono</th>
+                        <th scope="col">NIT</th>
+                        <th scope="col">Razón social</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
@@ -90,9 +94,18 @@
                 <tbody>
                     <tr th:each="cliente : ${clientes}">
                         <td th:text="${cliente.id}"></td>
+
                         <td class="product-name"
                             th:text="${cliente.nombre}"></td>
+
                         <td th:text="${cliente.telefono}"></td>
+
+                        <td th:text="${#strings.isEmpty(cliente.nit)
+                            ? 'Sin registrar' : cliente.nit}"></td>
+
+                        <td th:text="${#strings.isEmpty(cliente.razonSocial)
+                            ? 'Sin registrar' : cliente.razonSocial}"></td>
+
                         <td>
                             <a class="btn btn-secondary"
                                th:href="@{/clientes/{id}/editar(id=${cliente.id})}">
@@ -106,6 +119,7 @@
 
         <footer class="footer-info">
             <p>Universidad del Valle de Guatemala</p>
+
             <small>
                 Proyecto de Programación Orientada a Objetos · Grupo 12
             </small>
