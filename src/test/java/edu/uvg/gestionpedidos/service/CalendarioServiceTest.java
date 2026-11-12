@@ -167,15 +167,34 @@ class CalendarioServiceTest {
         assertEquals(EstadoPedido.ENTREGADO, dia.getEventos().get(0).getEstado());
     }
 
-    @Test
-    void listarPedidosSinFechaYNoCrearEventosParaEllos() {
+    
+        @Test
+        void listarPedidosSinFechaYNoCrearEventosParaEllos() {
+
+        // Crear primero el objeto simulado.
+        PedidoCalendarioVista pedidoSinFecha =
+                pedido(9L, EstadoPedido.REGISTRADO);
+
+        // Configurar después el repositorio.
         when(repository.buscarSinFechas(42L))
-                .thenReturn(List.of(pedido(9L, EstadoPedido.REGISTRADO)));
-        CalendarioDTO calendario = service.consultar("ana@example.com", "2026-11");
+                .thenReturn(List.of(pedidoSinFecha));
+
+        CalendarioDTO calendario =
+                service.consultar("ana@example.com", "2026-11");
+
         assertEquals(0, calendario.getCantidadEventos());
-        assertEquals(9L, calendario.getSinFecha().get(0).getId());
-        assertThrows(UnsupportedOperationException.class, calendario.getSinFecha()::clear);
-    }
+
+        assertEquals(
+                9L,
+                calendario.getSinFecha().get(0).getId()
+        );
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                calendario.getSinFecha()::clear
+        );
+        }
+
 
     @Test
     void rechazarMesInvalidoSinConsultarPedidos() {

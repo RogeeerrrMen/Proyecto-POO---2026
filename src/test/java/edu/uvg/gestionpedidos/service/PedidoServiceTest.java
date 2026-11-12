@@ -8,6 +8,8 @@ import java.time.LocalTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.lang.reflect.Field;
+import org.junit.jupiter.api.AfterEach;
 
 import edu.uvg.gestionpedidos.dto.DetallePedidoDTO;
 import edu.uvg.gestionpedidos.dto.PedidoDTO;
@@ -22,6 +24,9 @@ import edu.uvg.gestionpedidos.repository.ClienteRepository;
 import edu.uvg.gestionpedidos.repository.PedidoRepository;
 import edu.uvg.gestionpedidos.repository.ProductoRepository;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -35,6 +40,7 @@ class PedidoServiceTest {
     private EmprendimientoService emprendimientoService;
     private Emprendimiento emprendimiento;
     private static final String CORREO = "prueba@example.com";
+    private static final Long EMPRENDIMIENTO_ID = 42L;
 
     @BeforeEach
     void preparar() {
@@ -44,6 +50,17 @@ class PedidoServiceTest {
 
         emprendimientoService = mock(EmprendimientoService.class);
         emprendimiento = new Emprendimiento("Negocio de prueba", new Usuario());
+
+        try {
+
+            Field campoId = Emprendimiento.class.getDeclaredField("id");
+            campoId.setAccessible(true);
+            campoId.set(emprendimiento, EMPRENDIMIENTO_ID);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(
+                    "No se pudo configurar el emprendimiento de prueba.", e);
+        }
+
         when(emprendimientoService.buscarMiEmprendimiento(CORREO))
                 .thenReturn(Optional.of(emprendimiento));
 
@@ -52,6 +69,14 @@ class PedidoServiceTest {
                 clienteRepository,
                 productoRepository,
                 emprendimientoService);
+        
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        CORREO,
+                        "password",
+                        List.of()
+                )
+        );
     }
 
     private DetallePedidoDTO crearDetalle(Long productoId, int cantidad) {
@@ -83,9 +108,23 @@ class PedidoServiceTest {
         return producto;
     }
 
-    private void prepararClienteExistente() {
-        when(clienteRepository.findById(1L)).thenReturn(Optional.of(new Cliente("Ana", "12345678")));
+    @AfterEach
+    void limpiarSeguridad() {
+
+        SecurityContextHolder.clearContext();
     }
+
+    
+    private void prepararClienteExistente() {
+
+        when(clienteRepository.findByIdAndEmprendimientoId(
+                1L,
+                EMPRENDIMIENTO_ID))
+                .thenReturn(Optional.of(
+                        new Cliente("Ana", "12345678")
+                ));
+    }
+
 
     private void prepararGuardado() {
         when(pedidoRepository.save(any(Pedido.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
@@ -102,7 +141,7 @@ class PedidoServiceTest {
 
         Producto producto = crearProducto(25.50);
 
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(producto));
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(producto));
 
         Pedido pedido = pedidoService.registrar(crearFormulario(), CORREO);
 
@@ -125,9 +164,9 @@ class PedidoServiceTest {
         prepararClienteExistente();
         prepararGuardado();
 
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(crearProducto(25.50)));
 
-        when(productoRepository.findById(20L)).thenReturn(Optional.of(crearProducto(7.25)));
+        when(productoRepository.findByIdAndEmprendimientoId(20L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(crearProducto(7.25)));
 
         PedidoDTO datos = crearFormulario();
         datos.getDetalles().add(crearDetalle(20L, 3));
@@ -155,7 +194,11 @@ class PedidoServiceTest {
 
     @Test
     void rechazarClienteInexistente() {
-        when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
+
+        when(clienteRepository.findByIdAndEmprendimientoId(
+        1L,
+        EMPRENDIMIENTO_ID))
+        .thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> pedidoService.registrar(crearFormulario(), CORREO));
 
@@ -188,7 +231,7 @@ class PedidoServiceTest {
     void rechazarProductoInexistente() {
         prepararClienteExistente();
 
-        when(productoRepository.findById(10L)).thenReturn(Optional.empty());
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> pedidoService.registrar(crearFormulario(), CORREO));
 
@@ -202,7 +245,7 @@ class PedidoServiceTest {
         Producto producto = crearProducto(25.50);
         producto.desactivar();
 
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(producto));
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(producto));
 
         assertThrows(
                 IllegalArgumentException.class,() -> pedidoService.registrar(crearFormulario(), CORREO));
@@ -215,11 +258,14 @@ class PedidoServiceTest {
         prepararClienteExistente();
         prepararGuardado();
 
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(crearProducto(25.50)));
 
         Pedido registrado = pedidoService.registrar(crearFormulario(), CORREO);
 
-        when(pedidoRepository.findById(5L)).thenReturn(Optional.of(registrado));
+        when(pedidoRepository.findByIdAndEmprendimientoId(
+        5L,
+        EMPRENDIMIENTO_ID))
+        .thenReturn(Optional.of(registrado));
 
         Pedido consultado = pedidoService.obtenerPorId(5L);
 
@@ -229,11 +275,17 @@ class PedidoServiceTest {
 
     @Test
     void listarPedidos() {
-        when(pedidoRepository.findAllByOrderByFechaPedidoDescIdDesc()).thenReturn(List.of());
+
+        when(pedidoRepository
+        .findByEmprendimientoIdOrderByFechaPedidoDescIdDesc(
+                EMPRENDIMIENTO_ID))
+        .thenReturn(List.of());
 
         assertTrue(pedidoService.listar().isEmpty());
 
-        verify(pedidoRepository).findAllByOrderByFechaPedidoDescIdDesc();
+        verify(pedidoRepository)
+        .findByEmprendimientoIdOrderByFechaPedidoDescIdDesc(
+                EMPRENDIMIENTO_ID);
     }
 
     @Test
@@ -241,7 +293,7 @@ class PedidoServiceTest {
         prepararClienteExistente();
         prepararGuardado();
 
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(crearProducto(25.50)));
 
         PedidoDTO datos = crearFormulario();
         LocalDate fecha = LocalDate.of(2026, 11, 5);
@@ -268,7 +320,7 @@ class PedidoServiceTest {
         prepararClienteExistente();
         prepararGuardado();
 
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(crearProducto(25.50)));
 
         PedidoDTO datos = crearFormulario();
         LocalDate fecha = LocalDate.of(2026, 11, 5);
@@ -317,7 +369,7 @@ class PedidoServiceTest {
         prepararClienteExistente();
         prepararGuardado();
         Producto producto = crearProducto(100.00);
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(producto));
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(producto));
         PedidoDTO datos = crearFormulario();
         datos.getDetalles().get(0).setPrecioUnitario(new BigDecimal("90.00"));
 
@@ -338,7 +390,7 @@ class PedidoServiceTest {
             PedidoDTO datos = crearFormulario();
             datos.getDetalles().get(0).setPrecioUnitario(precio);
             prepararClienteExistente();
-            when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+            when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(crearProducto(25.50)));
 
             assertThrows(IllegalArgumentException.class, () -> pedidoService.registrar(datos, CORREO));
         }
@@ -349,7 +401,7 @@ class PedidoServiceTest {
     void permitirPrecioCero() {
         prepararClienteExistente();
         prepararGuardado();
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(crearProducto(25.50)));
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID)).thenReturn(Optional.of(crearProducto(25.50)));
         PedidoDTO datos = crearFormulario();
         datos.getDetalles().get(0).setPrecioUnitario(BigDecimal.ZERO);
 
@@ -359,7 +411,7 @@ class PedidoServiceTest {
     void copiarFlujoYConservarloCuandoCambiaLaConfiguracion() {
         prepararClienteExistente();
         prepararGuardado();
-        when(productoRepository.findById(10L))
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID))
                 .thenReturn(Optional.of(crearProducto(25.50)));
 
         List<EstadoPedido> flujoInicial = List.of(
@@ -392,7 +444,7 @@ class PedidoServiceTest {
     void recogerSinDireccionUsandoElFlujoConfigurado() {
         prepararClienteExistente();
         prepararGuardado();
-        when(productoRepository.findById(10L))
+        when(productoRepository.findByIdAndEmprendimientoId(10L, EMPRENDIMIENTO_ID))
                 .thenReturn(Optional.of(crearProducto(25.50)));
         emprendimiento.actualizarFlujoEstados(List.of(
                 EstadoPedido.REGISTRADO,

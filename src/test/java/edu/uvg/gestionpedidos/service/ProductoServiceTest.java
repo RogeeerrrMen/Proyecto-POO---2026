@@ -2,10 +2,15 @@ package edu.uvg.gestionpedidos.service;
 
 import edu.uvg.gestionpedidos.dto.ProductoDTO;
 import edu.uvg.gestionpedidos.entity.Producto;
+import edu.uvg.gestionpedidos.entity.Emprendimiento;
 import edu.uvg.gestionpedidos.repository.ProductoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.mockito.ArgumentCaptor;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -26,16 +31,49 @@ import static org.mockito.Mockito.when;
 class ProductoServiceTest {
 
     private ProductoRepository repositorio;
+    private EmprendimientoService emprendimientoService;
     private ProductoService servicio;
 
+    private Emprendimiento emprendimiento;
+    private static final Long EMPRENDIMIENTO_ID = 1L;
+
+    
     @BeforeEach
     void setUp() {
-        repositorio = mock(ProductoRepository.class);
-        servicio = new ProductoService(repositorio);
 
-        // Simula la base de datos: save() devuelve el mismo objeto que recibe.
-        when(repositorio.save(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+        repositorio = mock(ProductoRepository.class);
+        emprendimientoService = mock(EmprendimientoService.class);
+
+        servicio = new ProductoService(
+                repositorio,
+                emprendimientoService
+        );
+
+        // Simular un usuario autenticado.
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "prueba@example.com",
+                        "password",
+                        List.of()
+                )
+        );
+
+        // Simular el emprendimiento del usuario.
+        emprendimiento = mock(Emprendimiento.class);
+
+        when(emprendimiento.getId())
+                .thenReturn(EMPRENDIMIENTO_ID);
+
+        when(emprendimientoService.buscarMiEmprendimiento(
+                "prueba@example.com"))
+                .thenReturn(Optional.of(emprendimiento));
+
+        // Simular la persistencia.
+        when(repositorio.save(any(Producto.class)))
+                .thenAnswer(invocacion ->
+                        invocacion.getArgument(0));
     }
+
 
     private ProductoDTO datos(String nombre, String descripcion, Double precio) {
         ProductoDTO dto = new ProductoDTO();
@@ -53,7 +91,9 @@ class ProductoServiceTest {
         producto.setDescripcion("Porción grande");
         producto.actualizarPrecio(50.0);
         producto.activar();
-        when(repositorio.findById(1L)).thenReturn(Optional.of(producto));
+        when(repositorio.findByIdAndEmprendimientoId(
+        1L, EMPRENDIMIENTO_ID))
+        .thenReturn(Optional.of(producto));
         return producto;
     }
 
@@ -136,7 +176,8 @@ class ProductoServiceTest {
 
     @Test
     void modificarProductoInexistenteLanzaError() {
-        when(repositorio.findById(99L)).thenReturn(Optional.empty());
+
+        when(repositorio.findByIdAndEmprendimientoId( 99L, EMPRENDIMIENTO_ID)) .thenReturn(Optional.empty());
 
         assertThrows(NoSuchElementException.class,
                 () -> servicio.modificarProducto(99L, datos("Pastel", null, 10.0)));
@@ -204,16 +245,18 @@ class ProductoServiceTest {
 
     @Test
     void listarProductosDevuelveLosDelRepositorio() {
+
         Producto existente = productoExistente();
-        when(repositorio.findAllByOrderByIdAsc()).thenReturn(List.of(existente));
+        when(repositorio.findByEmprendimientoIdOrderByIdAsc(EMPRENDIMIENTO_ID)).thenReturn(List.of(existente));
 
         assertEquals(List.of(existente), servicio.listarProductos());
     }
 
     @Test
     void listarProductosActivosUsaLaConsultaDeActivos() {
+
         Producto existente = productoExistente();
-        when(repositorio.findByActivoTrueOrderByIdAsc()).thenReturn(List.of(existente));
+        when(repositorio.findByEmprendimientoIdAndActivoTrueOrderByIdAsc(EMPRENDIMIENTO_ID)).thenReturn(List.of(existente));
 
         assertEquals(List.of(existente), servicio.listarProductosActivos());
     }
@@ -230,7 +273,7 @@ class ProductoServiceTest {
     @Test
     void buscarProductosPorNombreUsaElTextoSinEspacios() {
         Producto existente = productoExistente();
-        when(repositorio.findByNombreContainingIgnoreCaseOrderByIdAsc("pastel")).thenReturn(List.of(existente));
+        when(repositorio.findByEmprendimientoIdAndNombreContainingIgnoreCaseOrderByIdAsc(EMPRENDIMIENTO_ID,"pastel")).thenReturn(List.of(existente));
 
         assertEquals(List.of(existente), servicio.buscarProductosPorNombre("  pastel "));
     }
@@ -238,10 +281,39 @@ class ProductoServiceTest {
     @Test
     void buscarProductosPorNombreSinTextoDevuelveTodos() {
         Producto existente = productoExistente();
-        when(repositorio.findAllByOrderByIdAsc()).thenReturn(List.of(existente));
+        when(repositorio.findByEmprendimientoIdOrderByIdAsc(
+        EMPRENDIMIENTO_ID))
+        .thenReturn(List.of(existente));
 
         assertEquals(List.of(existente), servicio.buscarProductosPorNombre("   "));
         assertEquals(List.of(existente), servicio.buscarProductosPorNombre(null));
         verify(repositorio, never()).findByNombreContainingIgnoreCaseOrderByIdAsc(anyString());
     }
+
+    @AfterEach
+    void limpiarSeguridad() {
+
+        SecurityContextHolder.clearContext();
+    }
+
+
+    @Test
+    void noPermiteModificarProductoDeOtroEmprendimiento() {
+
+        when(repositorio.findByIdAndEmprendimientoId(
+                99L, EMPRENDIMIENTO_ID))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                NoSuchElementException.class,
+                () -> servicio.modificarProducto(
+                        99L,
+                        datos("Producto ajeno", null, 50.0)
+                )
+        );
+
+        verify(repositorio, never())
+                .save(any(Producto.class));
+    }
+
 }
