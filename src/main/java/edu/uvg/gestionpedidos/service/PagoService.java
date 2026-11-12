@@ -86,37 +86,68 @@ public class PagoService {
     }
 
 
+    
     @Transactional
-    public Pago registrarAbono(Long pedidoId, BigDecimal monto, MetodoPago metodoPago,
-            String referencia, Long parteId, String correo) {
-        // El bloqueo y la comprobación de acceso están en la misma transacción.
+    public Pago registrarAbono(
+            Long pedidoId,
+            BigDecimal monto,
+            MetodoPago metodoPago,
+            String referencia,
+            Long parteId,
+            String correo) {
+
+        // El bloqueo y la comprobación de acceso están
+        // dentro de la misma transacción.
         Pedido pedido = bloquearPedido(pedidoId);
+
         verificarPropietario(pedido, correo);
-        return aplicarAbonoBloqueado(pedido, monto, metodoPago, referencia, parteId);
+
+        return aplicarAbonoBloqueado(
+                pedido, monto, metodoPago, referencia, parteId);
     }
 
-    private Pago aplicarAbono(Long pedidoId, BigDecimal monto,
-            MetodoPago metodoPago, String referencia, Long parteId) {
-        return aplicarAbonoBloqueado(bloquearPedido(pedidoId), monto, metodoPago, referencia, parteId);
-    }
+    
+    private Pago aplicarAbonoBloqueado(
+            Pedido pedido,
+            BigDecimal monto,
+            MetodoPago metodoPago,
+            String referencia,
+            Long parteId) {
 
-    private Pago aplicarAbonoBloqueado(Pedido pedido, BigDecimal monto,
-            MetodoPago metodoPago, String referencia, Long parteId) {
         Pago pago = obtenerOCrearPagoBloqueado(pedido);
-        PlanPago plan = planPagoRepository.findByPago_Id(pago.getId()).orElse(null);
+
+        PlanPago plan = planPagoRepository
+                .findByPago_Id(pago.getId())
+                .orElse(null);
+
         PartePago parte = null;
+
         if (plan != null) {
             parte = plan.buscarParte(parteId);
         } else if (parteId != null) {
-            throw new IllegalArgumentException("Este pedido no tiene un plan de pagos.");
+            throw new IllegalArgumentException(
+                    "Este pedido no tiene un plan de pagos.");
         }
-        Abono abono = new Abono(pago, monto, metodoPago, referencia, parte);
-        if (parte != null) { parte.validarAbono(abono.getMonto()); }
+
+        Abono abono = new Abono(
+                pago, monto, metodoPago, referencia, parte);
+
+        if (parte != null) {
+            parte.validarAbono(abono.getMonto());
+        }
+
         pago.registrarAbono(abono.getMonto());
-        if (parte != null) { parte.registrarAbono(abono.getMonto()); }
+
+        if (parte != null) {
+            parte.registrarAbono(abono.getMonto());
+        }
+
         abonoRepository.save(abono);
+
         return pagoRepository.save(pago);
     }
+
+
 
     @Transactional(readOnly = true)
     public void verificarAcceso(Long pedidoId, String correo) {
