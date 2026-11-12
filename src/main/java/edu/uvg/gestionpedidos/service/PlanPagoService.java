@@ -46,17 +46,26 @@ public class PlanPagoService {
         planPagoRepository.save(plan);
     }
 
+    
     private Pago prepararPago(Long pedidoId, String correo) {
 
-        // También serializa la creación del primer plan con nuevos abonos
-        Pago pago = pagoService.obtenerOCrearPago(pedidoId);
+        // Verificar primero que el pedido pertenece al usuario.
         pagoService.verificarAcceso(pedidoId, correo);
+
+        // Obtener o crear el pago después de autorizar.
+        Pago pago = pagoService.obtenerOCrearPago(pedidoId);
+
         if (planPagoRepository.findByPago_Id(pago.getId()).isPresent()) {
-            throw new IllegalArgumentException("El pedido ya tiene un plan de pagos.");
+            throw new IllegalArgumentException(
+                    "El pedido ya tiene un plan de pagos.");
         }
+
         if (pago.getSaldoPendiente().signum() <= 0) {
-            throw new IllegalArgumentException("El pedido ya no tiene saldo pendiente.");
+            throw new IllegalArgumentException(
+                    "El pedido ya no tiene saldo pendiente.");
         }
+
         return pago;
     }
+
 }
