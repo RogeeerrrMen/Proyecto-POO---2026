@@ -16,6 +16,9 @@ public class HomeController {
         return "dashboard";
     }
 
-    
+    @GetMapping("/equipo")
+    public String equipo() {
+        return "equipo";
+    }
 
 }

@@ -6,11 +6,15 @@
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <meta charset="UTF-8">
     <title>Sistema de Gestión de Pedidos</title>
+    <link rel="stylesheet" th:href="@{/css/interfaz.css(v=3)}">
 </head>
 
 <body>
     <header class="navbar">
-        <a class="logo" th:href="@{/}">Gestión de Pedidos</a>
+        <a class="logo" th:href="@{/}">
+            <img th:src="@{/images/logo.png}"
+                alt="Empréndelo">
+        </a>
 
         <nav class="nav-links" aria-label="Navegación principal">
             <a class="btn btn-secondary" th:href="@{/login}">

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Conoce al equipo</title>
+
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/interfaz.css(v=4)}">
+</head>
+
+<body class="app-page">
+    <header th:replace="~{fragments/navegacion :: barra('equipo')}">
+    </header>
+
+    <main id="contenido"
+          tabindex="-1"
+          class="dashboard-container equipo-page">
+
+        <header class="dashboard-heading">
+            <p class="eyebrow">GRUPO 12 · UVG</p>
+
+            <h1 class="card-title">Conoce al equipo</h1>
+
+            <p class="card-subtitle">
+                Las personas detrás de Gestión de Pedidos.
+            </p>
+        </header>
+
+        <section class="card equipo-seccion"
+                 aria-labelledby="proyecto-title">
+
+            <h2 id="proyecto-title">La intención del proyecto</h2>
+
+            <p>
+                Próximamente compartiremos cómo surgió esta idea
+                y qué buscamos lograr con el proyecto.
+            </p>
+        </section>
+
+        <section class="card equipo-seccion"
+                 aria-labelledby="integrantes-title">
+
+            <h2 id="integrantes-title">Nuestro equipo</h2>
+
+            <div class="equipo-foto-pendiente">
+                Aquí agregaremos la foto del equipo.
+            </div>
+
+            <p class="equipo-pendiente">
+                Próximamente encontrarás los nombres
+                de los integrantes.
+            </p>
+        </section>
+
+        <footer class="footer-info">
+            <p>Universidad del Valle de Guatemala</p>
+
+            <small>
+                Proyecto de Programación Orientada a Objetos · Grupo 12
+            </small>
+        </footer>
+    </main>
+</body>
+
+</html>

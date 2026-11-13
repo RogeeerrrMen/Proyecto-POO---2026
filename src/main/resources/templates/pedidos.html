@@ -6,22 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedidos</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/interfaz.css(v=3)}">
 </head>
 
-<body>
-    <header class="navbar">
-        <a class="logo" th:href="@{/dashboard}">
-            Gestión de Pedidos
-        </a>
+<body class="app-page">
+    <header th:replace="~{fragments/navegacion :: barra('pedidos')}"></header>
 
-        <nav class="nav-links" aria-label="Navegación principal">
-            <a class="btn btn-secondary" th:href="@{/dashboard}">
-                Volver al inicio
-            </a>
-        </nav>
-    </header>
-
-    <main class="dashboard-container">
+    <main class="dashboard-container" id="contenido" tabindex="-1">
         <header class="products-heading">
             <div>
                 <p class="eyebrow">TU EMPRENDIMIENTO</p>
@@ -32,7 +23,7 @@
             </div>
 
             <a class="btn btn-primary" th:href="@{/pedidos/nuevo}">
-                Registrar pedido
+                Nuevo pedido
             </a>
         </header>
 
@@ -60,7 +51,7 @@
                         <th scope="col">Fecha de registro</th>
                         <th scope="col">Estado</th>
                         <th scope="col" class="price-cell">Total</th>
-                        <th scope="col">Acción</th>
+                        <th scope="col">Acciones</th>
                     </tr>
                 </thead>
 
@@ -83,8 +74,13 @@
 
                         <td>
                             <a class="btn btn-secondary"
-                               th:href="@{/pedidos/{id}(id=${pedido.id})}">
+                                th:href="@{/pedidos/{id}(id=${pedido.id})}">
                                 Ver detalle
+                            </a>
+
+                            <a class="btn btn-secondary"
+                                th:href="@{/pedidos/{id}/pago(id=${pedido.id})}">
+                                Ver pago
                             </a>
                         </td>
                     </tr>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header class="navbar app-header" th:fragment="barra(activo)">
+    <a class="skip-link" href="#contenido">
+        Saltar al contenido
+    </a>
+
+    <div class="app-brand-row">
+        <a class="logo" th:href="@{/dashboard}">
+            <img class="logo-emprendelo"
+                th:src="@{/images/logo.png}"
+                alt="Empréndelo">
+        </a>
+
+        <form class="logout-form"
+              th:action="@{/logout}"
+              method="post">
+            <button type="submit" class="btn btn-secondary">
+                Cerrar sesión
+            </button>
+        </form>
+    </div>
+
+    <nav class="app-nav" aria-label="Navegación principal">
+        <a class="app-nav-link"
+           th:href="@{/dashboard}"
+           th:attr="aria-current=${activo == 'dashboard' ? 'page' : null}">
+            Dashboard
+        </a>
+
+        <a class="app-nav-link"
+           th:href="@{/clientes}"
+           th:attr="aria-current=${activo == 'clientes' ? 'page' : null}">
+            Clientes
+        </a>
+
+        <a class="app-nav-link"
+           th:href="@{/productos}"
+           th:attr="aria-current=${activo == 'productos' ? 'page' : null}">
+            Productos
+        </a>
+
+        <a class="app-nav-link"
+           th:href="@{/pedidos}"
+           th:attr="aria-current=${activo == 'pedidos' ? 'page' : null}">
+            Pedidos
+        </a>
+
+        <a class="app-nav-link"
+           th:href="@{/calendario}"
+           th:attr="aria-current=${activo == 'calendario' ? 'page' : null}">
+            Calendario
+        </a>
+
+        <a class="app-nav-link"
+           th:href="@{/gastos}"
+           th:attr="aria-current=${activo == 'gastos' ? 'page' : null}">
+            Gastos
+        </a>
+
+        <a class="app-nav-link"
+           th:href="@{/emprendimientos}"
+           th:attr="aria-current=${activo == 'configuracion' ? 'page' : null}">
+            Configuración
+        </a>
+    </nav>
+</header>
+
+</body>
+</html>
