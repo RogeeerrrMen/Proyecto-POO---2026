@@ -1,27 +1,18 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <meta charset="UTF-8">
     <title>Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/interfaz.css(v=3)}">
 </head>
 
-<body>
- <header class="navbar">
-        <a class="logo" th:href="@{/dashboard}">
-            Gestión de Pedidos
-        </a>
+<body class="app-page">
+ <header th:replace="~{fragments/navegacion :: barra('dashboard')}"></header>
 
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="btn btn-secondary">
-                Cerrar sesión
-            </button>
-        </form>
-    </header>
-
-    <main class="dashboard-container">
+    <main class="dashboard-container" id="contenido" tabindex="-1">
         <header class="dashboard-heading">
             <p class="eyebrow">TU ESPACIO DE TRABAJO</p>
             <h1 class="card-title">Todo empieza con orden.</h1>
@@ -102,12 +93,16 @@
             </div>
         </section>
 
-        <footer class="footer-info">
-            <p>Universidad del Valle de Guatemala</p>
-            <small>
-                Proyecto de Programación Orientada a Objetos · Grupo 12
-            </small>
-        </footer>
+            <footer class="footer-info">
+                <p>Universidad del Valle de Guatemala</p>
+
+                <small>
+                    Proyecto de Programación Orientada a Objetos · Grupo 12
+                </small>
+                    <a class="equipo-link" th:href="@{/equipo}">
+                        Conoce al equipo
+                    </a>
+            </footer>
     </main>
 
 </body>

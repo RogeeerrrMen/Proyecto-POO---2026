@@ -8,22 +8,13 @@
     <title>Configurar estados</title>
 
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/interfaz.css(v=3)}">
 </head>
 
-<body>
-    <header class="navbar">
-        <a class="logo" th:href="@{/dashboard}">
-            Gestión de Pedidos
-        </a>
+<body class="app-page">
+    <header th:replace="~{fragments/navegacion :: barra('configuracion')}"></header>
 
-        <nav class="nav-links">
-            <a class="btn btn-secondary" th:href="@{/emprendimientos}">
-                Volver a configuración
-            </a>
-        </nav>
-    </header>
-
-    <main class="dashboard-container">
+    <main class="dashboard-container" id="contenido" tabindex="-1">
         <section class="card">
             <h1 class="card-title">Estados de tus pedidos</h1>
 

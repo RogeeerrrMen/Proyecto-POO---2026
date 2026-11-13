@@ -6,21 +6,13 @@
     <title th:text="${productoId == null} ? 'Agregar producto' : 'Editar producto'">Agregar producto</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <link rel="stylesheet" th:href="@{/css/productos.css}">
+    <link rel="stylesheet" th:href="@{/css/interfaz.css(v=3)}">
 </head>
-<body>
-    <header class="navbar">
-        <a class="logo" th:href="@{/dashboard}">
-            Gestión de Pedidos
-        </a>
 
-        <nav class="nav-links" aria-label="Navegación principal">
-            <a class="btn btn-secondary" th:href="@{/productos}">
-                Volver a productos
-            </a>
-        </nav>
-    </header>
-
-    <main class="main-container">
+<body class="app-page">
+    <header th:replace="~{fragments/navegacion :: barra('productos')}"></header>
+    
+    <main class="main-container" id="contenido" tabindex="-1">
         <section class="card" aria-labelledby="producto-title">
             <p class="eyebrow">TU CATÁLOGO</p>
 

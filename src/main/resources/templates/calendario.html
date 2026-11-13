@@ -6,17 +6,12 @@
     <title>Calendario de pedidos</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <link rel="stylesheet" th:href="@{/css/calendario.css}">
+    <link rel="stylesheet" th:href="@{/css/interfaz.css(v=3)}">
 </head>
-<body>
-    <header class="navbar">
-        <a class="logo" th:href="@{/dashboard}">Gestión de Pedidos</a>
-        <nav class="nav-links" aria-label="Navegación principal">
-            <a class="btn btn-secondary" th:href="@{/pedidos}">Ver pedidos</a>
-            <a class="btn btn-secondary" th:href="@{/dashboard}">Volver al inicio</a>
-        </nav>
-    </header>
+<body class="app-page">
+    <header th:replace="~{fragments/navegacion :: barra('calendario')}"></header>
 
-    <main class="dashboard-container calendario-page">
+    <main class="dashboard-container calendario-page" id="contenido" tabindex="-1">
         <header class="dashboard-heading">
             <p class="eyebrow">ORGANIZA TUS PEDIDOS</p>
             <h1 class="card-title">Calendario de pedidos</h1>

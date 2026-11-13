@@ -6,22 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalle del pedido</title>
     <link rel="stylesheet" th:href="@{/css/styles.css(v=2)}">
+    <link rel="stylesheet" th:href="@{/css/interfaz.css(v=3)}">
 </head>
 
-<body>
-    <header class="navbar">
-        <a class="logo" th:href="@{/dashboard}">
-            Gestión de Pedidos
-        </a>
+<body class="app-page">
+    <header th:replace="~{fragments/navegacion :: barra('pedidos')}"></header>
 
-        <nav class="nav-links" aria-label="Navegación principal">
-            <a class="btn btn-secondary" th:href="@{/pedidos}">
-                Volver a pedidos
-            </a>
-        </nav>
-    </header>
-
-    <main class="dashboard-container pedido-detalle">
+    <main class="dashboard-container pedido-detalle" id="contenido" tabindex="-1">
         <header class="pedido-encabezado">
             <div>
                 <p class="eyebrow">TUS PEDIDOS</p>
@@ -34,7 +25,7 @@
 
                 <a class="btn btn-primary"
                     th:href="@{/pedidos/{id}/pago(id=${pedido.id})}">
-                        Gestionar pagos
+                        Ver pago
                     </a>
             </div>
 
